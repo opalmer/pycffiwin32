@@ -18,7 +18,7 @@ documentation for the constant names and their purpose:
 import six
 
 from pywincffi.core.ffi import Library, ffi
-from pywincffi.core.checks import input_check, error_check
+from pywincffi.core.checks import Enums, input_check, error_check
 
 kernel32 = Library.load("kernel32")
 
@@ -35,6 +35,40 @@ PROCESS_VM_OPERATION = 0x0008
 PROCESS_VM_READ = 0x0008
 PROCESS_VM_WRITE = 0x0020
 SYNCHRONIZE = 0x00100000
+
+
+def GetCurrentProcess():
+    """
+    Returns a handle to the current process.
+
+    .. seealso::
+
+        https://msdn.microsoft.com/en-us/library/windows/desktop/ms683179
+    """
+    return kernel32.GetCurrentProcess()
+
+
+def GetCurrentProcessId():
+    """
+    Returns the PID of the current process.
+
+    .. seealso::
+
+        https://msdn.microsoft.com/en-us/library/windows/desktop/ms683180
+    """
+    return kernel32.GetCurrentProcessId()
+
+
+def GetProcessId(Process):
+    """
+    Returns the PID of the current process.
+
+    .. seealso::
+
+        https://msdn.microsoft.com/en-us/library/windows/desktop/ms683215
+    """
+    input_check("Process", Process, Enums.HANDLE)
+    return kernel32.GetProcessId(Process)
 
 
 def OpenProcess(dwDesiredAccess, bInheritHandle, dwProcessId):
@@ -71,3 +105,4 @@ def OpenProcess(dwDesiredAccess, bInheritHandle, dwProcessId):
     error_check("OpenProcess")
 
     return ffi.new_handle(handle_id)
+
