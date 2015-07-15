@@ -15,7 +15,7 @@ documentation for the constant names and their purpose:
     Not all constants may be defined
 """
 
-import six
+from six import integer_types
 
 from pywincffi.core.ffi import Library, ffi
 from pywincffi.core.checks import Enums, input_check, error_check
@@ -93,9 +93,9 @@ def OpenProcess(dwDesiredAccess, bInheritHandle, dwProcessId):
 
         https://msdn.microsoft.com/en-us/library/windows/desktop/ms684320
     """
-    input_check("dwDesiredAccess", dwDesiredAccess, six.integer_types)
+    input_check("dwDesiredAccess", dwDesiredAccess, integer_types)
     input_check("bInheritHandle", bInheritHandle, bool)
-    input_check("dwProcessId", dwProcessId, six.integer_types)
+    input_check("dwProcessId", dwProcessId, integer_types)
 
     handle_id = kernel32.OpenProcess(
         ffi.cast("DWORD", dwDesiredAccess),
@@ -105,4 +105,47 @@ def OpenProcess(dwDesiredAccess, bInheritHandle, dwProcessId):
     error_check("OpenProcess")
 
     return ffi.new_handle(handle_id)
+
+
+# TODO: return value documentation
+def DuplicateHandle(
+        hSourceProcessHandle, hSourceHandle, hTargetProcessHandle,
+        dwDesiredAccess, bInheritHandle, dwOptions=0):
+    """
+    Duplicates process handles.
+
+    :param handle hSourceProcessHandle:
+        A handle to the process owning ``hSourceHandle``.
+
+    :param handle hSourceHandle:
+        The handle to be duplicated.
+
+    :param handle hTargetProcessHandle:
+        A handle to the process which will receive the
+        duplicate ``hSourceHandle``.
+
+    :param int dwDesiredAccess:
+        The access rights for the new handle.  This will be ignored
+        if ``dwOptions`` specifies ``DUPLICATE_SAME_ACCESS``
+
+    :param bool bInheritHandle:
+        True if the handle is inheritable.
+
+    :keyword int dwOptions:
+        Optional options which can be zero, the default, or a combination of
+        ``DUPLICATE_CLOSE_SOURCE`` or ``DUPLICATE_SAME_ACCESS``
+
+    :return:
+
+    .. seealso::
+
+        https://msdn.microsoft.com/en-us/library/windows/desktop/ms724251
+    """
+    input_check("hSourceProcessHandle", hSourceProcessHandle, Enums.HANDLE)
+    input_check("hSourceHandle", hSourceHandle, Enums.HANDLE)
+    input_check("hTargetProcessHandle", hTargetProcessHandle, Enums.HANDLE)
+    input_check("dwDesiredAccess", dwDesiredAccess, integer_types)
+    input_check("bInheritHandle", bInheritHandle, bool)
+    input_check("dwOptions", dwOptions, integer_types)
+
 

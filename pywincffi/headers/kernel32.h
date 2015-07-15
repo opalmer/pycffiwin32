@@ -22,6 +22,7 @@ HANDLE GetCurrentProcess(void);
 DWORD GetCurrentProcessId(void);
 DWORD GetProcessId(HANDLE);
 BOOL OpenProcess(DWORD, BOOL, DWORD);
+BOOL DuplicateHandle(HANDLE, HANDLE, HANDLE, LPHANDLE, DWORD, BOOL, DWORD);
 
 // IO
 BOOL CreatePipe(PHANDLE, PHANDLE, LPSECURITY_ATTRIBUTES, DWORD);
