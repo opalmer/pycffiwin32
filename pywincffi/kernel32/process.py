@@ -136,6 +136,7 @@ def DuplicateHandle(
         ``DUPLICATE_CLOSE_SOURCE`` or ``DUPLICATE_SAME_ACCESS``
 
     :return:
+        Returns a ``LPHANDLE`` object which contains the duplicate handle
 
     .. seealso::
 
@@ -147,5 +148,13 @@ def DuplicateHandle(
     input_check("dwDesiredAccess", dwDesiredAccess, integer_types)
     input_check("bInheritHandle", bInheritHandle, bool)
     input_check("dwOptions", dwOptions, integer_types)
+
+    lpTargetHandle = ffi.new("LPHANDLE")
+    code = kernel32.DuplicateHandle(
+        hSourceProcessHandle, hSourceHandle, hTargetProcessHandle,
+        lpTargetHandle, dwDesiredAccess, dwOptions
+    )
+    error_check("DuplicateHandle", code=code, expected=Enums.NON_ZERO)
+    return lpTargetHandle
 
 
