@@ -28,7 +28,7 @@ class Library(object):
     CACHE = {}
 
     @staticmethod
-    def _load_header(header_name):
+    def _read_header(header_name):
         """
         For the given ``header_name`` locate the path on disk and
         attempt to load it.  This function will search the `headers`
@@ -95,7 +95,7 @@ class Library(object):
         logger.debug("Loading %s onto %s", library_name, ffi_instance)
 
         if header is None:
-            header = cls._load_header(library_name + ".h")
+            header = cls._read_header(library_name + ".h")
 
         if header is None:
             raise HeaderNotFoundError(
