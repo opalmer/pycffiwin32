@@ -3,9 +3,11 @@ import os
 from pywincffi.core.ffi import ffi
 from pywincffi.core.testutil import TestCase
 from pywincffi.exceptions import WindowsAPIError
+from pywincffi.kernel32.io import CreatePipe, CloseHandle
 from pywincffi.kernel32.process import (
-    PROCESS_QUERY_LIMITED_INFORMATION, OpenProcess, GetCurrentProcess,
-    GetProcessId, GetCurrentProcessId)
+    PROCESS_QUERY_LIMITED_INFORMATION, DUPLICATE_SAME_ACCESS,
+    OpenProcess, GetCurrentProcess, GetProcessId, GetCurrentProcessId,
+    DuplicateHandle)
 
 
 class TestOpenProcess(TestCase):
@@ -45,5 +47,30 @@ class TestGetProcess(TestCase):
 
     def test_get_current_process_pid(self):
         self.assertEqual(GetCurrentProcessId(), os.getpid())
+
+
+class TestDuplicateHandle(TestCase):
+    """
+    Tests for :func:`pywincffi.kernel32.process.DuplicateHandle`
+    """
+    def test_duplicate_write_pipe_result_type(self):
+        reader, writer = CreatePipe()
+        self.addCleanup(CloseHandle, reader)
+        self.addCleanup(CloseHandle, writer)
+        current_process = GetCurrentProcess()
+        result = DuplicateHandle(
+            current_process,
+            writer,
+            current_process,
+            DUPLICATE_SAME_ACCESS,
+            False
+        )
+        typeof = ffi.typeof(result)
+        self.assertEqual(typeof.kind, "pointer")
+        self.assertEqual(typeof.cname, "void * *")
+
+    # TODO: test more than than just the return type
+    # TODO: test_duplicate_read_pipe
+
 
 

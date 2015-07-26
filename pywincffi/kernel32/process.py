@@ -35,6 +35,8 @@ PROCESS_VM_OPERATION = 0x0008
 PROCESS_VM_READ = 0x0008
 PROCESS_VM_WRITE = 0x0020
 SYNCHRONIZE = 0x00100000
+DUPLICATE_CLOSE_SOURCE = 0x00000001
+DUPLICATE_SAME_ACCESS = 0x00000002
 
 
 def GetCurrentProcess():
@@ -107,7 +109,6 @@ def OpenProcess(dwDesiredAccess, bInheritHandle, dwProcessId):
     return ffi.new_handle(handle_id)
 
 
-# TODO: return value documentation
 def DuplicateHandle(
         hSourceProcessHandle, hSourceHandle, hTargetProcessHandle,
         dwDesiredAccess, bInheritHandle, dwOptions=0):
@@ -132,8 +133,8 @@ def DuplicateHandle(
         True if the handle is inheritable.
 
     :keyword int dwOptions:
-        Optional options which can be zero, the default, or a combination of
-        ``DUPLICATE_CLOSE_SOURCE`` or ``DUPLICATE_SAME_ACCESS``
+        Optional values which can be zero, the default, or a combination of
+        ``DUPLICATE_CLOSE_SOURCE`` and/or ``DUPLICATE_SAME_ACCESS``
 
     :return:
         Returns a ``LPHANDLE`` object which contains the duplicate handle
@@ -152,7 +153,7 @@ def DuplicateHandle(
     lpTargetHandle = ffi.new("LPHANDLE")
     code = kernel32.DuplicateHandle(
         hSourceProcessHandle, hSourceHandle, hTargetProcessHandle,
-        lpTargetHandle, dwDesiredAccess, dwOptions
+        lpTargetHandle, dwDesiredAccess, bInheritHandle, dwOptions
     )
     error_check("DuplicateHandle", code=code, expected=Enums.NON_ZERO)
     return lpTargetHandle
