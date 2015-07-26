@@ -80,3 +80,8 @@ class AnonymousPipeReadWriteTest(TestCase):
         self.assertEqual(data, read_data)
 
 
+class TestSetNamedPipeHandleState(TestCase):
+    """
+    Tests for :func:`pywincffi.kernel32.io.SetNamedPipeHandleState` and
+    :func:`pywincffi.kernel32.io.GetNamedPipeHandleState`
+    """
