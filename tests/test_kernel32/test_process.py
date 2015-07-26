@@ -1,12 +1,11 @@
 import os
 
-from pywincffi.core.ffi import ffi
+from pywincffi.core.ffi import Library
 from pywincffi.core.testutil import TestCase
 from pywincffi.exceptions import WindowsAPIError
 from pywincffi.kernel32.io import CreatePipe, CloseHandle
 from pywincffi.kernel32.process import (
-    PROCESS_QUERY_LIMITED_INFORMATION, DUPLICATE_SAME_ACCESS,
-    OpenProcess, GetCurrentProcess, GetProcessId, GetCurrentProcessId,
+    OpenProcess, GetCurrentProcess, GetCurrentProcessId, GetProcessId,
     DuplicateHandle)
 
 
@@ -15,11 +14,14 @@ class TestOpenProcess(TestCase):
     Tests for :func:`pywincffi.kernel32.process.OpenProcess`
     """
     def test_returns_handle(self):
+        ffi, library = Library.load()
+
         handle = OpenProcess(
-            PROCESS_QUERY_LIMITED_INFORMATION,
+            library.PROCESS_QUERY_LIMITED_INFORMATION,
             False,
             os.getpid()
         )
+
         typeof = ffi.typeof(handle)
         self.assertEqual(typeof.kind, "pointer")
         self.assertEqual(typeof.cname, "void *")
@@ -36,6 +38,8 @@ class TestGetProcess(TestCase):
     Tests for pywincffi.kernel32.process.GetProcess* functions
     """
     def test_get_current_process_type(self):
+        ffi, library = Library.load()
+
         current_process = GetCurrentProcess()
         typeof = ffi.typeof(current_process)
         self.assertEqual(typeof.kind, "pointer")
@@ -54,6 +58,8 @@ class TestDuplicateHandle(TestCase):
     Tests for :func:`pywincffi.kernel32.process.DuplicateHandle`
     """
     def test_duplicate_write_pipe_result_type(self):
+        ffi, library = Library.load()
+
         reader, writer = CreatePipe()
         self.addCleanup(CloseHandle, reader)
         self.addCleanup(CloseHandle, writer)
@@ -62,7 +68,7 @@ class TestDuplicateHandle(TestCase):
             current_process,
             writer,
             current_process,
-            DUPLICATE_SAME_ACCESS,
+            library.DUPLICATE_SAME_ACCESS,
             False
         )
         typeof = ffi.typeof(result)
