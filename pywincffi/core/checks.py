@@ -75,7 +75,7 @@ def error_check(api_function, code=None, expected=0):
         )
 
 
-def input_check(name, value, allowed_types):
+def input_check(name, value, allowed_types=None, allowed_values=None):
     """
     A small wrapper around :func:`isinstance`.  This is mainly meant
     to be used inside of other functions to pre-validate input rater
@@ -96,16 +96,28 @@ def input_check(name, value, allowed_types):
         also supports a special value, ``pywincffi.core.checks.Enums.HANDLE``,
         which will check to ensure ``value`` is a handle object.
 
+    :param tuple allowed_values:
+        A tuple of allowed values.  When provided ``value`` must
+        be in this tuple otherwise :class:`InputError` will be
+        raised.
+
     :raises pywincffi.exceptions.InputError:
         Raised if ``value`` is not an instance of ``allowed_types``
     """
     assert isinstance(name, string_types)
+    assert allowed_values is None or isinstance(allowed_values, tuple)
 
     logger.debug(
-        "input_check(name=%r, value=%r, allowed_types=%r",
-        name, value, allowed_types
+        "input_check(name=%r, value=%r, allowed_types=%r, allowed_values=%r",
+        name, value, allowed_types, allowed_values
     )
-    if allowed_types in INPUT_CHECK_MAPPINGS:
+
+    if allowed_types is None and isinstance(allowed_values, tuple):
+        if value not in allowed_values:
+            raise InputError(
+                name, value, allowed_types, allowed_values=allowed_values)
+
+    elif allowed_types in INPUT_CHECK_MAPPINGS:
         mapping = INPUT_CHECK_MAPPINGS[allowed_types]
 
         try:
