@@ -5,6 +5,8 @@ Files
 A module containing common Windows file functions.
 """
 
+from collections import namedtuple
+
 from six import integer_types
 
 from pywincffi.core.ffi import Library
@@ -120,44 +122,8 @@ def SetNamedPipeHandleState(
         ffi.new("LPDWORD", lpMode),
         lpMaxCollectionCount,
         lpCollectDataTimeout
-
     )
     error_check("SetNamedPipeHandleState", code=code, expected=Enums.NON_ZERO)
-
-
-# TODO: document return value (namedtuple)
-def GetNamedPipeHandleState(hNamedPipe):
-    """
-    Retrieves information about a specified named pipe.
-
-    :param handle hNamedPipe:
-        The handle to the named pipe you wish to retrieve information
-        for.
-
-    :return:
-
-    .. seealso::
-
-        https://msdn.microsoft.com/en-us/library/windows/desktop/aa365443
-    """
-    input_check("hNamedPipe", hNamedPipe, Enums.HANDLE)
-    ffi, library = Library.load()
-    lpState = ffi.new("LPDWORD")
-    lpCurInstances = ffi.new("LPDWORD")
-    lpMaxCollectionCount = ffi.new("LPDWORD")
-    lpCollectDataTimeout = ffi.new("LPDWORD")
-
-    code = library.GetNamedPipeHandleState(
-        hNamedPipe,
-        lpState,
-        lpCurInstances,
-        lpMaxCollectionCount,
-        lpCollectDataTimeout,
-        ffi.NULL, ffi.NULL
-    )
-    error_check("GetNamedPipeHandleState", code=code, expected=Enums.NON_ZERO)
-
-    # TODO: return namedtuple
 
 
 
@@ -180,7 +146,8 @@ def WriteFile(hFile, lpBuffer, lpOverlapped=None):
         documentation for intended usage and below for an example of this
         struct.
 
-        >>> from pywincffi.core.ffi import ffi
+        >>> from pywincffi.core.ffi import Library
+        >>> ffi, library = Library.load()
         >>> reader = None # normally, this would be a handle
         >>> struct = ffi.new(
         ...     "OVERLAPPED[1]", [{
