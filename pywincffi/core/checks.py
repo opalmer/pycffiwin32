@@ -55,12 +55,18 @@ def error_check(api_function, code=None, expected=0):
     :raises pywincffi.exceptions.WindowsAPIError:
         Raised if we receive an unexpected result from a Windows API call
     """
-    ffi, _ = Library.load()
+    ffi, library = Library.load()
 
     if code is None:
         result, api_error_message = ffi.getwinerror()
     else:
-        result, api_error_message = ffi.getwinerror(code)
+        # If the is zero and we expected non-zero then
+        # the real error message can be found with ffi.getwinerror.
+        if code == 0 and expected is Enums.NON_ZERO:
+            result = code
+            _, api_error_message = ffi.getwinerror()
+        else:
+            result, api_error_message = ffi.getwinerror(code)
 
     logger.debug(
         "error_check(%r, code=%r, result=%r, expected=%r)",
@@ -68,7 +74,7 @@ def error_check(api_function, code=None, expected=0):
     )
 
     if (expected is Enums.NON_ZERO
-        and (result != 0 or code is not None and code != 0)):
+            and (result != 0 or code is not None and code != 0)):
         return
 
     if expected != result:
