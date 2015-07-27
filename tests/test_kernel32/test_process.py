@@ -57,7 +57,7 @@ class TestDuplicateHandle(TestCase):
     """
     Tests for :func:`pywincffi.kernel32.process.DuplicateHandle`
     """
-    def test_duplicate_write_pipe_result_type(self):
+    def test_duplicate_handle_type(self):
         ffi, library = Library.load()
 
         reader, writer = CreatePipe()
