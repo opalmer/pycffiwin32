@@ -7,6 +7,7 @@
 
 // Processes
 HANDLE OpenProcess(DWORD, BOOL, DWORD);
+BOOL GetExitCodeProcess(HANDLE, LPDWORD);
 
 // Pipes
 BOOL CreatePipe(PHANDLE, PHANDLE, LPSECURITY_ATTRIBUTES, DWORD);
