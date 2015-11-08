@@ -5,6 +5,7 @@ Files
 A module containing common Windows file functions.
 """
 
+import msvcrt
 from collections import namedtuple
 
 from six import integer_types
@@ -18,6 +19,16 @@ PeekNamedPipeResult = namedtuple(
     ("lpBuffer", "lpBytesRead", "lpTotalBytesAvail",
      "lpBytesLeftThisMessage")
 )
+
+
+def handle_from_file(python_file):
+    """
+    Given a standard Python file object produce a Windows
+    handle object that be be used in Windows function calls.
+    """
+    input_check("python_file", python_file, Enums.PYFILE)
+
+
 
 
 def CreatePipe(nSize=0, lpPipeAttributes=None):
@@ -342,7 +353,6 @@ def FileLockEx(
         lpOverlapped
     )
     error_check("LockFileEx", code=code, expected=Enums.NON_ZERO)
-
 
 
 def CloseHandle(hObject):
