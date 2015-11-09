@@ -200,7 +200,7 @@ class TestGetHandleFromFile(TestCase):
         try:
             test_file.write("foo")
             test_file.flush()
-        except OSError as error:
+        except (OSError, IOError, WindowsError) as error:
             # EBADF == Bad file descriptor (because CloseHandle closed it)
             self.assertEqual(error.errno, EBADF)
         else:
