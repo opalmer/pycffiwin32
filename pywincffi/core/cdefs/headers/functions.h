@@ -22,3 +22,6 @@ BOOL LockFileEx(HANDLE, DWORD, DWORD, DWORD, DWORD, LPOVERLAPPED);
 // Misc IO
 BOOL CloseHandle(HANDLE);
 HANDLE GetStdHandle(DWORD);
+
+// Custom functions
+HANDLE handle_from_fd(int);

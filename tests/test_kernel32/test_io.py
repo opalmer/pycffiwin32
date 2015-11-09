@@ -1,3 +1,7 @@
+import os
+import tempfile
+from errno import EBADF
+
 try:
     from unittest.mock import patch
 except ImportError:
@@ -5,10 +9,10 @@ except ImportError:
 
 from pywincffi.core.testutil import TestCase
 from pywincffi.core.ffi import Library
-from pywincffi.exceptions import WindowsAPIError
+from pywincffi.exceptions import WindowsAPIError, InputError
 from pywincffi.kernel32.io import (
     CreatePipe, CloseHandle, WriteFile, ReadFile, GetStdHandle,
-    PeekNamedPipe, PeekNamedPipeResult)
+    PeekNamedPipe, PeekNamedPipeResult, handle_from_file)
 
 
 class PipeBaseTestCase(TestCase):
@@ -162,4 +166,36 @@ class TestGetStdHandle(TestCase):
             GetStdHandle(library.STD_ERROR_HANDLE),
             library.GetStdHandle(library.STD_ERROR_HANDLE)
         )
+
+
+class TestGetHandleFromFile(TestCase):
+    def test_fails_if_not_a_file(self):
+        with self.assertRaises(InputError):
+            handle_from_file(0)
+
+    def test_fails_if_file_is_not_open(self):
+        fd, path = tempfile.mkstemp()
+        test_file = os.fdopen(fd, "r")
+        test_file.close()
+
+        with self.assertRaises(ValueError):
+            handle_from_file(test_file)
+
+    def test_opens_correct_file_handle(self):
+        fd, path = tempfile.mkstemp()
+        test_file = os.fdopen(fd, "r")
+        handle = handle_from_file(test_file)
+        CloseHandle(handle)
+
+        # If CloseHandle() was passed the same handle
+        # that test_file is then os.close on the same
+        # handle should fail
+        try:
+            os.close(fd)
+        except OSError as error:
+            self.assertEqual(error.errno, EBADF)
+        else:
+            self.fail("Expected os.close(%r) to fail" % fd)
+
+
 
