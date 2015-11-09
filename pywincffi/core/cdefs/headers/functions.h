@@ -4,6 +4,8 @@
 //           RETURN_TYPE FunctionName(...
 //
 
+// Custom functions
+HANDLE handle_from_fd(int);
 
 // Processes
 HANDLE OpenProcess(DWORD, BOOL, DWORD);
@@ -18,10 +20,8 @@ BOOL SetNamedPipeHandleState(HANDLE, LPDWORD, LPDWORD, LPDWORD);
 BOOL WriteFile(HANDLE, LPCVOID, DWORD, LPDWORD, LPOVERLAPPED);
 BOOL ReadFile(HANDLE, LPVOID, DWORD, LPDWORD, LPOVERLAPPED);
 BOOL LockFileEx(HANDLE, DWORD, DWORD, DWORD, DWORD, LPOVERLAPPED);
+DWORD GetFinalPathNameByHandle(HANDLE, LPTSTR, DWORD, DWORD);
 
 // Misc IO
 BOOL CloseHandle(HANDLE);
 HANDLE GetStdHandle(DWORD);
-
-// Custom functions
-HANDLE handle_from_fd(int);
