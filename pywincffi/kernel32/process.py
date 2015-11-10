@@ -57,27 +57,3 @@ def OpenProcess(dwDesiredAccess, bInheritHandle, dwProcessId):
 
     return ffi.new_handle(handle_id)
 
-
-def GetExitCodeProcess(hProcess):
-    """
-    Retrieves the termination status of the specified process.
-
-    :param handle hProcess:
-        A process handle to return an exit code for.  A result produced by
-        :func:`OpenProcess` could be used here for example.
-
-    :returns:
-        Returns the exit code for the specified process as an integer.
-
-    .. seealso::
-
-        https://msdn.microsoft.com/en-us/library/windows/desktop/ms683189
-    """
-    input_check("hProcess", hProcess, Enums.HANDLE)
-    ffi, library = Library.load()
-
-    lpExitCode = ffi.new("LPDWORD")
-    code = library.GetExitCodeProcess(hProcess, lpExitCode)
-    error_check("GetExitCodeProcess", code=code, expected=Enums.NON_ZERO)
-
-    return lpExitCode[0]
