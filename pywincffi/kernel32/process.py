@@ -18,7 +18,7 @@ documentation for the constant names and their purpose:
 import six
 
 from pywincffi.core.ffi import Library
-from pywincffi.core.checks import Enums, input_check, error_check
+from pywincffi.core.checks import input_check, error_check
 
 
 def OpenProcess(dwDesiredAccess, bInheritHandle, dwProcessId):
