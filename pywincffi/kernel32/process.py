@@ -56,4 +56,3 @@ def OpenProcess(dwDesiredAccess, bInheritHandle, dwProcessId):
     error_check("OpenProcess")
 
     return ffi.new_handle(handle_id)
-
