@@ -169,8 +169,6 @@ class TestGetStdHandle(TestCase):
             library.GetStdHandle(library.STD_ERROR_HANDLE)
         )
 
-# TODO: tests for FileLockEx
-
 
 class TestGetHandleFromFile(TestCase):
     def test_fails_if_not_a_file(self):

@@ -316,61 +316,6 @@ def ReadFile(hFile, nNumberOfBytesToRead, lpOverlapped=None):
     return ffi.string(lpBuffer)
 
 
-def FileLockEx(
-        hFile, dwFlags, nNumberOfBytesToLockLow, nNumberOfBytesToLockHigh):
-    """
-    Locks the specified ``hFile`` for access by the calling process.
-
-    .. seealso::
-
-        https://msdn.microsoft.com/en-us/library/aa365203
-
-    :param handle hFile:
-        A handle to the file to lock.
-
-    :param int dwFlags:
-        This parameter accepts two enums which can be combined:
-
-            * **LOCKFILE_EXCLUSIVE_LOCK** - Obtain an exclusive lock otherwise
-              a shared lock will be obtained.
-            * **LOCKFILE_FAIL_IMMEDIATELY** - Return immediately if LockFileEx()
-              cannot acquire the lock.  Otherwise, wait.
-
-    :param int nNumberOfBytesToLockLow:
-        The low-order 32 bits of the length of the byte range to lock.
-
-    :param int nNumberOfBytesToLockHigh:
-        The high-order 32 bits of the length of the byte range to lock.
-    """
-    ffi, library = Library.load()
-
-    # Input checks
-    input_check("hFile", hFile, Enums.HANDLE)
-    input_check(
-        "dwFlags", dwFlags, integer_types,
-        allowed_values=(
-            library.LOCKFILE_EXCLUSIVE_LOCK, library.LOCKFILE_FAIL_IMMEDIATELY,
-            library.LOCKFILE_EXCLUSIVE_LOCK | library.LOCKFILE_FAIL_IMMEDIATELY
-        )
-    )
-    input_check(
-        "nNumberOfBytesToLockLow", nNumberOfBytesToLockLow, integer_types)
-    input_check(
-        "nNumberOfBytesToLockHigh", nNumberOfBytesToLockHigh, integer_types)
-
-    lpOverlapped = ffi.new(
-        "OVERLAPPED[2]", [{
-            "Offset": nNumberOfBytesToLockLow,
-            "OffsetHigh": nNumberOfBytesToLockHigh
-        }]
-    )
-    code = library.LockFileEx(
-        hFile, dwFlags, 0, nNumberOfBytesToLockLow, nNumberOfBytesToLockHigh,
-        lpOverlapped
-    )
-    error_check("LockFileEx", code=code, expected=Enums.NON_ZERO)
-
-
 def CloseHandle(hObject):
     """
     Closes an open object handle.
