@@ -1,8 +1,15 @@
-import enum
+"""
+Checks
+======
+
+Provides functions that are responsible for internal type checks.
+"""
+
 import io
 import types
 from collections import namedtuple
 
+import enum
 from six import PY3, string_types
 
 from pywincffi.core.ffi import Library
@@ -63,7 +70,7 @@ def error_check(api_function, code=None, expected=0):
     :raises pywincffi.exceptions.WindowsAPIError:
         Raised if we receive an unexpected result from a Windows API call
     """
-    ffi, library = Library.load()
+    ffi, _ = Library.load()
 
     if code is None:
         result, api_error_message = ffi.getwinerror()
@@ -81,8 +88,8 @@ def error_check(api_function, code=None, expected=0):
         api_function, code, result, expected
     )
 
-    if (expected is Enums.NON_ZERO
-            and (result != 0 or code is not None and code != 0)):
+    if (expected is Enums.NON_ZERO and (
+            result != 0 or code is not None and code != 0)):
         return
 
     if expected != result:
