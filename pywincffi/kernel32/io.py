@@ -36,7 +36,7 @@ def handle_from_file(python_file):
         Returns a Windows handle object which is pointing at
         the provided ``python_file`` object.
     """
-    ffi, library = Library.load()
+    _, library = Library.load()
     input_check("python_file", python_file, Enums.PYFILE)
 
     # WARNING:
