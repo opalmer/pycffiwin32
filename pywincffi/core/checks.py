@@ -30,7 +30,7 @@ PYFILE
 if PY3:
     FileType = io.IOBase
 else:
-    FileType = types.FileType
+    FileType = types.FileType  # pylint: disable=no-member
 
 # A mapping of value we can expect to get from `ffi.typeof` against
 # some known input enums.
