@@ -37,13 +37,11 @@ def transform(cls, constants=None, functions=None):
     assert isinstance(constants, set)
     assert isinstance(functions, set)
 
-    # TODO: needs to change once we FFILibrary returns the prebuilt lib
-    if cls.name == "FFILibrary":
-        for value in constants:
-            cls.locals[value] = [scoped_nodes.Class(value, None)]
+    for value in constants:
+        cls.locals[value] = [scoped_nodes.Class(value, None)]
 
-        for value in functions:
-            cls.locals[value] = [scoped_nodes.Function(value, None)]
+    for value in functions:
+        cls.locals[value] = [scoped_nodes.Function(value, None)]
 
 
 def register(linter):  # pylint: disable=unused-argument
@@ -63,10 +61,17 @@ def register(linter):  # pylint: disable=unused-argument
     functions = set()
     with open(FUNCTIONS_HEADER, "r") as functions_file:
         for line in functions_file:
+            # special case that does not match the regex
+            if line.startswith("HANDLE handle_from_fd(int);"):
+                functions.add("handle_from_fd")
+                continue
+
             match = REGEX_FUNCTION.match(line)
             if match:
                 functions.add(match.group(1))
 
+    # TODO: needs to change once we FFILibrary returns the prebuilt lib
     MANAGER.register_transform(
         scoped_nodes.Class,
-        partial(transform, constants=constants, functions=functions))
+        partial(transform, constants=constants, functions=functions),
+        predicate=lambda node: node.name == "FFILibrary")
