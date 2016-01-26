@@ -126,12 +126,6 @@ class TestRead(TestCase):
 
 class TestFFI(TestCase):
     """Tests for :func:`pywincffi.core.dist._ffi`"""
-    def test_sets_unicode(self):
-        with patch.object(FFI, "set_unicode") as mocked_set_unicode:
-            _ffi()
-
-        mocked_set_unicode.assert_called_once_with(True)
-
     def test_set_source(self):
         with patch.object(FFI, "set_source") as mocked_set_source:
             _ffi()
