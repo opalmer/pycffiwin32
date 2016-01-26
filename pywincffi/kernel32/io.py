@@ -6,10 +6,12 @@ A module containing common Windows file functions.
 """
 
 
-from six import integer_types
+from six import integer_types, string_types
 
 from pywincffi.core import dist
 from pywincffi.core.checks import Enums, input_check, error_check
+from pywincffi.exceptions import WindowsAPIError
+from pywincffi.kernel32.handle import INVALID_HANDLE_VALUE
 
 
 def WriteFile(hFile, lpBuffer, lpOverlapped=None):
@@ -83,8 +85,7 @@ def ReadFile(hFile, nNumberOfBytesToRead, lpOverlapped=None):
     :param int nNumberOfBytesToRead:
         The number of bytes to read from ``hFile``
 
-    :type lpOverlapped: None or OVERLAPPED
-    :param lpOverlapped:
+    :param OVERLAPPED lpOverlapped:
         None or a pointer to a ``OVERLAPPED`` structure.  See Microsoft's
         documentation for intended usage and below for an example of this
         struct.
@@ -119,3 +120,100 @@ def ReadFile(hFile, nNumberOfBytesToRead, lpOverlapped=None):
     )
     error_check("ReadFile", code=code, expected=Enums.NON_ZERO)
     return ffi.string(lpBuffer)
+
+
+def CreateFile(
+    lpFileName, dwDesiredAccess=None, dwShareMode=None,
+    lpSecurityAttributes=None, dwCreationDisposition=None,
+    dwFlagsAndAttributes=None, hTemplateFile=None):
+    """
+    Creates or opens a file or other I/O device.  See Microsoft's
+    documentation below for a more detailed explanation of the input
+    arguments.  Most of the defaults are meant to approximate the same
+    behavior as Python's :func:`open` function.
+
+    .. seealso::
+
+        https://msdn.microsoft.com/en-us/library/aa363858
+
+    :param str lpFileName:
+        Name of the device or filename to be created or opened.  See
+        Microsoft's documentation for more detailed information.
+
+    :keyword int dwDesiredAccess:
+        The requested access to the file or device.  By default
+        the file will be opened with ``GENERIC_READ`` access.
+
+    :keyword int dwShareMode:
+        Controls how you wish to share this file object with other
+        processes.  By default the file handle will not be shared with
+        other processes.
+
+    :keyword LPSECURITY_ATTRIBUTES lpSecurityAttributes:
+        A structure containing information about the security attributes.
+
+    :keyword int dwCreationDisposition:
+        What to do when the file or devices exists or not exists.  By default
+        this function will create the file or device if it does not exist and
+        overwrite it if it does and it's writable.  In Windows terms, this
+        is the ``CREATE_ALWAYS`` mode.
+
+    :keyword int dwFlagsAndAttributes:
+        Attributes to apply to the file.  By default, no special attributes are
+        applied.
+
+    :keyword handle hTemplateFile:
+        An optional template handle used to apply file attributes and
+        extended attributes to the file being created.  By default, this is
+        not used.
+    """
+    ffi, library = dist.load()
+
+    input_check("lpFileName", lpFileName, string_types)
+    lpFileName = ffi.new("wchar_t[%d]" % len(lpFileName), lpFileName)
+
+    if dwDesiredAccess is None:
+        dwDesiredAccess = library.GENERIC_READ
+
+    if dwShareMode is None:
+        dwShareMode = 0
+
+    if lpSecurityAttributes is None:
+        lpSecurityAttributes = ffi.NULL
+
+    if dwCreationDisposition is None:
+        dwCreationDisposition = library.CREATE_ALWAYS
+
+    if dwFlagsAndAttributes is None:
+        dwFlagsAndAttributes = library.FILE_ATTRIBUTE_NORMAL
+
+    if hTemplateFile is None:
+        hTemplateFile = ffi.NULL
+    else:
+        input_check("hTemplateFile", hTemplateFile, Enums.FILE)
+
+    # Input checks
+    input_check("dwDesiredAccess", dwDesiredAccess, integer_types)
+    input_check("dwShareMode", dwShareMode, integer_types)
+    input_check(
+        "lpSecurityAttributes", lpSecurityAttributes,
+        Enums.LPSECURITY_ATTRIBUTES)
+    input_check("dwCreationDisposition", dwCreationDisposition, integer_types)
+    input_check("dwFlagsAndAttributes", dwFlagsAndAttributes, integer_types)
+
+    handle = library.CreateFile(
+        ffi.cast("LPCTSTR", lpFileName),
+        ffi.cast("DWORD", dwDesiredAccess),
+        ffi.cast("DWORD", dwShareMode),
+        lpSecurityAttributes,
+        ffi.cast("DWORD", dwCreationDisposition),
+        ffi.cast("DWORD", dwFlagsAndAttributes),
+        hTemplateFile
+    )
+
+    if handle == INVALID_HANDLE_VALUE:
+        raise WindowsAPIError(
+            "CreateFile", ffi.getwinerror()[-1], INVALID_HANDLE_VALUE,
+            "not %s" % INVALID_HANDLE_VALUE)
+
+    return handle
