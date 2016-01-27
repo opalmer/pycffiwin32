@@ -5,6 +5,7 @@ Files
 A module containing common Windows file functions.
 """
 
+from collections import namedtuple
 
 from six import integer_types, string_types
 
@@ -12,6 +13,17 @@ from pywincffi.core import dist
 from pywincffi.core.checks import Enums, input_check, error_check
 from pywincffi.exceptions import WindowsAPIError
 from pywincffi.kernel32.handle import INVALID_HANDLE_VALUE
+
+
+FileTime = namedtuple(
+    "FileTime", ("dwLowDateTime", "dwHighDateTime")
+)
+FileInformation = namedtuple(
+    "FileInformation",
+    ("dwFileAttributes", "ftCreationTime", "ftLastAccessTime",
+     "ftLastWriteTime", "dwVolumeSerialNumber", "nFileSizeHigh",
+     "nFileSizeLow", "nNumberOfLinks", "nFileIndexHigh", "nFileIndexLow")
+)
 
 
 def WriteFile(hFile, lpBuffer, lpOverlapped=None):
@@ -211,9 +223,54 @@ def CreateFile(
         hTemplateFile
     )
 
-    if handle == INVALID_HANDLE_VALUE:
+    if handle == INVALID_HANDLE_VALUE:  # pragma: no cover
         raise WindowsAPIError(
             "CreateFile", ffi.getwinerror()[-1], INVALID_HANDLE_VALUE,
             "not %s" % INVALID_HANDLE_VALUE)
 
     return handle
+
+
+def GetFileInformationByHandle(hFile):
+    """
+    Retrieves information about the specified ``hFile``.
+
+    .. seealso::
+
+        https://msdn.microsoft.com/en-us/library/aa364952
+
+    :param handle hFile:
+        The handle to retrieve information for.
+
+    :returns:
+        Returns an instance of :class:`FileInformation`
+    """
+    input_check("hFile", hFile, Enums.HANDLE)
+
+    ffi, library = dist.load()
+    lpFileInformation = ffi.new("LPBY_HANDLE_FILE_INFORMATION")
+    code = library.GetFileInformationByHandle(hFile, lpFileInformation)
+    error_check(
+        "GetFileInformationByHandle", code=code, expected=Enums.NON_ZERO)
+
+    return FileInformation(
+        dwFileAttributes=lpFileInformation.dwFileAttributes,
+        ftCreationTime=FileTime(
+            dwLowDateTime=lpFileInformation.ftCreationTime.dwLowDateTime,
+            dwHighDateTime=lpFileInformation.ftCreationTime.dwHighDateTime
+        ),
+        ftLastAccessTime=FileTime(
+            dwLowDateTime=lpFileInformation.ftLastAccessTime.dwLowDateTime,
+            dwHighDateTime=lpFileInformation.ftLastAccessTime.dwHighDateTime
+        ),
+        ftLastWriteTime=FileTime(
+            dwLowDateTime=lpFileInformation.ftLastWriteTime.dwLowDateTime,
+            dwHighDateTime=lpFileInformation.ftLastWriteTime.dwHighDateTime
+        ),
+        dwVolumeSerialNumber=lpFileInformation.dwVolumeSerialNumber,
+        nFileSizeHigh=lpFileInformation.nFileSizeHigh,
+        nFileSizeLow=lpFileInformation.nFileSizeLow,
+        nNumberOfLinks=lpFileInformation.nNumberOfLinks,
+        nFileIndexHigh=lpFileInformation.nFileIndexHigh,
+        nFileIndexLow=lpFileInformation.nFileIndexLow
+    )
