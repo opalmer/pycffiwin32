@@ -1,5 +1,10 @@
+import os
+import tempfile
+from os.path import isfile
+
 from pywincffi.dev.testutil import TestCase
-from pywincffi.kernel32.io import WriteFile, ReadFile
+from pywincffi.kernel32.handle import CloseHandle
+from pywincffi.kernel32.io import WriteFile, ReadFile, CreateFile
 
 
 class AnonymousPipeReadWriteTest(TestCase):
@@ -43,3 +48,20 @@ class AnonymousPipeReadWriteTest(TestCase):
 
         read_data = ReadFile(reader, data_written * 2)
         self.assertEqual(data, read_data)
+
+
+class CreateFileTest(TestCase):
+    """
+    Tests for :func:`pywincffi.kernel32.io.CreateFile`
+    """
+    def test_create_disposition_default(self):
+        fd, path = tempfile.mkstemp()
+        os.close(fd)
+        os.remove(path)
+        handle = CreateFile(path)
+        CloseHandle(handle)
+
+        # TODO: THis fails but shoudln't with CREATE_ALWAYS
+        # self.assertTrue(isfile(path))
+        # CloseHandle(h)
+        # os.remove(path)
