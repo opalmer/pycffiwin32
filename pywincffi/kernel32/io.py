@@ -182,7 +182,6 @@ def CreateFile(
     ffi, library = dist.load()
 
     input_check("lpFileName", lpFileName, string_types)
-    lpFileName = ffi.new("wchar_t[%d]" % len(lpFileName), lpFileName)
 
     if dwDesiredAccess is None:
         dwDesiredAccess = library.GENERIC_READ
@@ -210,11 +209,16 @@ def CreateFile(
     input_check(
         "lpSecurityAttributes", lpSecurityAttributes,
         Enums.LPSECURITY_ATTRIBUTES)
-    input_check("dwCreationDisposition", dwCreationDisposition, integer_types)
+    input_check(
+        "dwCreationDisposition", dwCreationDisposition, integer_types,
+        allowed_values=(
+            library.CREATE_ALWAYS, library.CREATE_NEW, library.OPEN_ALWAYS,
+            library.OPEN_EXISTING, library.TRUNCATE_EXISTING))
     input_check("dwFlagsAndAttributes", dwFlagsAndAttributes, integer_types)
 
     handle = library.CreateFile(
-        ffi.cast("LPCTSTR", lpFileName),
+        ffi.cast("LPCTSTR",
+             ffi.new("wchar_t[%d]" % len(lpFileName), lpFileName)),
         ffi.cast("DWORD", dwDesiredAccess),
         ffi.cast("DWORD", dwShareMode),
         lpSecurityAttributes,
@@ -227,6 +231,18 @@ def CreateFile(
         raise WindowsAPIError(
             "CreateFile", ffi.getwinerror()[-1], INVALID_HANDLE_VALUE,
             "not %s" % INVALID_HANDLE_VALUE)
+
+    try:
+        error_check("CreateFile")
+
+    # Certain error conditions are actually indications of
+    # success long as the handle is valid.  These are documented
+    # on MSDN for the dwCreationDisposition parameter.
+    except WindowsAPIError as error:
+        if (dwCreationDisposition not in (
+                library.CREATE_ALWAYS, library.OPEN_ALWAYS) or
+                error.code != library.ERROR_ALREADY_EXISTS):
+            raise
 
     return handle
 
