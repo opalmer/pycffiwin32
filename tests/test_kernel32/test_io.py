@@ -1,10 +1,15 @@
-import os
+import shutil
 import tempfile
-from os.path import isfile
+import os
+from random import choice
+from string import ascii_letters
+from os.path import join, isfile
 
+from pywincffi.core import dist
 from pywincffi.dev.testutil import TestCase
 from pywincffi.kernel32.handle import CloseHandle
-from pywincffi.kernel32.io import WriteFile, ReadFile, CreateFile
+from pywincffi.kernel32.io import (
+    WriteFile, ReadFile, CreateFile, GetFileInformationByHandle)
 
 
 class AnonymousPipeReadWriteTest(TestCase):
@@ -54,14 +59,27 @@ class CreateFileTest(TestCase):
     """
     Tests for :func:`pywincffi.kernel32.io.CreateFile`
     """
-    def test_create_disposition_default(self):
-        fd, path = tempfile.mkstemp()
-        os.close(fd)
-        os.remove(path)
-        handle = CreateFile(path)
-        CloseHandle(handle)
+    def create_file(self, **kwargs):
+        cleanup_dir = kwargs.pop("cleanup_dir", True)
+        close_on_exit = kwargs.pop("close_on_exit", True)
 
-        # TODO: THis fails but shoudln't with CREATE_ALWAYS
-        # self.assertTrue(isfile(path))
-        # CloseHandle(h)
-        # os.remove(path)
+        tempdir = tempfile.mkdtemp()
+        if cleanup_dir:
+            self.addCleanup(shutil.rmtree, tempdir, ignore_errors=True)
+
+        # TODO: duh..convert filename, it cannot contain ":".  Otherwise we get
+        # 'The filename, directory name, or volume label syntax is incorrect'
+        filename = join(
+            tempdir,
+            "".join(choice(ascii_letters) for _ in range(10))) + ".txt"
+
+        handle = CreateFile(filename, **kwargs)
+
+        if close_on_exit:
+            self.addCleanup(CloseHandle, handle)
+
+        return filename, handle
+
+    def test_creates_file(self):
+        path, handle = self.create_file()
+        self.assertTrue(isfile(path))
