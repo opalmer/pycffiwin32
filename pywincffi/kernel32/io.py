@@ -217,8 +217,7 @@ def CreateFile(
     input_check("dwFlagsAndAttributes", dwFlagsAndAttributes, integer_types)
 
     handle = library.CreateFile(
-        ffi.cast("LPCTSTR",
-             ffi.new("wchar_t[%d]" % len(lpFileName), lpFileName)),
+        ffi.cast("LPCTSTR", ffi.new("wchar_t[]", lpFileName)),
         ffi.cast("DWORD", dwDesiredAccess),
         ffi.cast("DWORD", dwShareMode),
         lpSecurityAttributes,
