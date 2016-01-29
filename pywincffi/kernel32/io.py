@@ -7,178 +7,23 @@ A module containing common Windows file functions.
 
 from collections import namedtuple
 
-from six import integer_types
+from six import integer_types, string_types
 
 from pywincffi.core import dist
-from pywincffi.core.checks import Enums, input_check, error_check, NoneType
+from pywincffi.core.checks import Enums, input_check, error_check
+from pywincffi.exceptions import WindowsAPIError
+from pywincffi.kernel32.handle import INVALID_HANDLE_VALUE
 
-PeekNamedPipeResult = namedtuple(
-    "PeekNamedPipeResult",
-    ("lpBuffer", "lpBytesRead", "lpTotalBytesAvail",
-     "lpBytesLeftThisMessage")
+
+FileTime = namedtuple(
+    "FileTime", ("dwLowDateTime", "dwHighDateTime")
 )
-
-
-def CreatePipe(nSize=0, lpPipeAttributes=None):
-    """
-    Creates an anonymous pipe and returns the read and write handles.
-
-    .. seealso::
-
-        https://msdn.microsoft.com/en-us/library/aa365152
-        https://msdn.microsoft.com/en-us/library/aa379560
-
-    >>> from pywincffi.core import dist
-    >>> ffi, library = dist.load()
-    >>> lpPipeAttributes = ffi.new(
-    ...     "SECURITY_ATTRIBUTES[1]", [{
-    ...     "nLength": ffi.sizeof("SECURITY_ATTRIBUTES"),
-    ...     "bInheritHandle": True,
-    ...     "lpSecurityDescriptor": ffi.NULL
-    ...     }]
-    ... )
-    >>> reader, writer = CreatePipe(lpPipeAttributes=lpPipeAttributes)
-
-    :keyword int nSize:
-        The size of the buffer in bytes.  Passing in 0, which is the default
-        will cause the system to use the default buffer size.
-
-    :keyword lpPipeAttributes:
-        The security attributes to apply to the handle. By default
-        ``NULL`` will be passed in meaning then handle we create
-        cannot be inherited.  For more detailed information see the links
-        below.
-
-    :return:
-        Returns a tuple of handles containing the reader and writer
-        ends of the pipe that was created.  The user of this function
-        is responsible for calling CloseHandle at some point.
-    """
-    input_check("nSize", nSize, integer_types)
-    input_check("lpPipeAttributes", lpPipeAttributes, (NoneType, dict))
-    ffi, library = dist.load()
-
-    hReadPipe = ffi.new("PHANDLE")
-    hWritePipe = ffi.new("PHANDLE")
-
-    if lpPipeAttributes is None:
-        lpPipeAttributes = ffi.NULL
-
-    code = library.CreatePipe(hReadPipe, hWritePipe, lpPipeAttributes, nSize)
-    error_check("CreatePipe", code=code, expected=Enums.NON_ZERO)
-
-    return hReadPipe[0], hWritePipe[0]
-
-
-def SetNamedPipeHandleState(
-        hNamedPipe,
-        lpMode=None, lpMaxCollectionCount=None, lpCollectDataTimeout=None):
-    """
-    Sets the read and blocking mode of the specified ``hNamedPipe``.
-
-    .. seealso::
-
-        https://msdn.microsoft.com/en-us/library/aa365787
-
-    :param handle hNamedPipe:
-        A handle to the named pipe instance.
-
-    :keyword int lpMode:
-        The new pipe mode which is a combination of read mode:
-
-            * ``PIPE_READMODE_BYTE``
-            * ``PIPE_READMODE_MESSAGE``
-
-        And a wait-mode flag:
-
-            * ``PIPE_WAIT``
-            * ``PIPE_NOWAIT``
-
-    :keyword int lpMaxCollectionCount:
-        The maximum number of bytes collected.
-
-    :keyword int lpCollectDataTimeout:
-        The maximum time, in milliseconds, that can pass before a
-        remote named pipe transfers information
-    """
-    input_check("hNamedPipe", hNamedPipe, Enums.HANDLE)
-    ffi, library = dist.load()
-
-    if lpMode is None:
-        lpMode = ffi.NULL
-    else:
-        input_check("lpMode", lpMode, integer_types)
-        lpMode = ffi.new("LPDWORD", lpMode)
-
-    if lpMaxCollectionCount is None:
-        lpMaxCollectionCount = ffi.NULL
-    else:
-        input_check(
-            "lpMaxCollectionCount", lpMaxCollectionCount, integer_types)
-        lpMaxCollectionCount = ffi.new("LPDWORD", lpMaxCollectionCount)
-
-    if lpCollectDataTimeout is None:
-        lpCollectDataTimeout = ffi.NULL
-    else:
-        input_check(
-            "lpCollectDataTimeout", lpCollectDataTimeout, integer_types)
-        lpCollectDataTimeout = ffi.new("LPDWORD", lpCollectDataTimeout)
-
-    code = library.SetNamedPipeHandleState(
-        hNamedPipe,
-        lpMode,
-        lpMaxCollectionCount,
-        lpCollectDataTimeout
-    )
-    error_check("SetNamedPipeHandleState", code=code, expected=Enums.NON_ZERO)
-
-
-def PeekNamedPipe(hNamedPipe, nBufferSize):
-    """
-    Copies data from a pipe into a buffer without removing it
-    from the pipe.
-
-    .. seealso::
-
-        https://msdn.microsoft.com/en-us/library/aa365779
-
-    :param handle hNamedPipe:
-        The handele to the pipe object we want to peek into.
-
-    :param int nBufferSize:
-        The number of bytes to 'peek' into the pipe.
-
-    :rtype: :class:`PeekNamedPipeResult`
-    :return:
-        Returns an instance of :class:`PeekNamedPipeResult` which
-        contains the buffer read, number of bytes read and the result.
-    """
-    input_check("hNamedPipe", hNamedPipe, Enums.HANDLE)
-    input_check("nBufferSize", nBufferSize, integer_types)
-    ffi, library = dist.load()
-
-    # Outputs
-    lpBuffer = ffi.new("LPVOID[%d]" % nBufferSize)
-    lpBytesRead = ffi.new("LPDWORD")
-    lpTotalBytesAvail = ffi.new("LPDWORD")
-    lpBytesLeftThisMessage = ffi.new("LPDWORD")
-
-    code = library.PeekNamedPipe(
-        hNamedPipe,
-        lpBuffer,
-        nBufferSize,
-        lpBytesRead,
-        lpTotalBytesAvail,
-        lpBytesLeftThisMessage
-    )
-    error_check("PeekNamedPipe", code=code, expected=Enums.NON_ZERO)
-
-    return PeekNamedPipeResult(
-        lpBuffer=lpBuffer,
-        lpBytesRead=lpBytesRead[0],
-        lpTotalBytesAvail=lpTotalBytesAvail[0],
-        lpBytesLeftThisMessage=lpBytesLeftThisMessage[0]
-    )
+FileInformation = namedtuple(
+    "FileInformation",
+    ("dwFileAttributes", "ftCreationTime", "ftLastAccessTime",
+     "ftLastWriteTime", "dwVolumeSerialNumber", "nFileSizeHigh",
+     "nFileSizeLow", "nNumberOfLinks", "nFileIndexHigh", "nFileIndexLow")
+)
 
 
 def WriteFile(hFile, lpBuffer, lpOverlapped=None):
@@ -252,8 +97,7 @@ def ReadFile(hFile, nNumberOfBytesToRead, lpOverlapped=None):
     :param int nNumberOfBytesToRead:
         The number of bytes to read from ``hFile``
 
-    :type lpOverlapped: None or OVERLAPPED
-    :param lpOverlapped:
+    :param OVERLAPPED lpOverlapped:
         None or a pointer to a ``OVERLAPPED`` structure.  See Microsoft's
         documentation for intended usage and below for an example of this
         struct.
@@ -288,3 +132,160 @@ def ReadFile(hFile, nNumberOfBytesToRead, lpOverlapped=None):
     )
     error_check("ReadFile", code=code, expected=Enums.NON_ZERO)
     return ffi.string(lpBuffer)
+
+
+def CreateFile(
+    lpFileName, dwDesiredAccess=None, dwShareMode=None,
+    lpSecurityAttributes=None, dwCreationDisposition=None,
+    dwFlagsAndAttributes=None, hTemplateFile=None):
+    """
+    Creates or opens a file or other I/O device.  See Microsoft's
+    documentation below for a more detailed explanation of the input
+    arguments.  Most of the defaults are meant to approximate the same
+    behavior as Python's :func:`open` function.
+
+    .. seealso::
+
+        https://msdn.microsoft.com/en-us/library/aa363858
+
+    :param str lpFileName:
+        Name of the device or filename to be created or opened.  See
+        Microsoft's documentation for more detailed information.
+
+    :keyword int dwDesiredAccess:
+        The requested access to the file or device.  By default
+        the file will be opened with ``GENERIC_READ`` access.
+
+    :keyword int dwShareMode:
+        Controls how you wish to share this file object with other
+        processes.  By default the file handle will not be shared with
+        other processes.
+
+    :keyword LPSECURITY_ATTRIBUTES lpSecurityAttributes:
+        A structure containing information about the security attributes.
+
+    :keyword int dwCreationDisposition:
+        What to do when the file or devices exists or not exists.  By default
+        this function will create the file or device if it does not exist and
+        overwrite it if it does and it's writable.  In Windows terms, this
+        is the ``CREATE_ALWAYS`` mode.
+
+    :keyword int dwFlagsAndAttributes:
+        Attributes to apply to the file.  By default, no special attributes are
+        applied.
+
+    :keyword handle hTemplateFile:
+        An optional template handle used to apply file attributes and
+        extended attributes to the file being created.  By default, this is
+        not used.
+    """
+    ffi, library = dist.load()
+
+    input_check("lpFileName", lpFileName, string_types)
+
+    if dwDesiredAccess is None:
+        dwDesiredAccess = library.GENERIC_READ
+
+    if dwShareMode is None:
+        dwShareMode = 0
+
+    if lpSecurityAttributes is None:
+        lpSecurityAttributes = ffi.NULL
+
+    if dwCreationDisposition is None:
+        dwCreationDisposition = library.CREATE_ALWAYS
+
+    if dwFlagsAndAttributes is None:
+        dwFlagsAndAttributes = library.FILE_ATTRIBUTE_NORMAL
+
+    if hTemplateFile is None:
+        hTemplateFile = ffi.NULL
+    else:
+        input_check("hTemplateFile", hTemplateFile, Enums.FILE)
+
+    # Input checks
+    input_check("dwDesiredAccess", dwDesiredAccess, integer_types)
+    input_check("dwShareMode", dwShareMode, integer_types)
+    input_check(
+        "lpSecurityAttributes", lpSecurityAttributes,
+        Enums.LPSECURITY_ATTRIBUTES)
+    input_check(
+        "dwCreationDisposition", dwCreationDisposition, integer_types,
+        allowed_values=(
+            library.CREATE_ALWAYS, library.CREATE_NEW, library.OPEN_ALWAYS,
+            library.OPEN_EXISTING, library.TRUNCATE_EXISTING))
+    input_check("dwFlagsAndAttributes", dwFlagsAndAttributes, integer_types)
+
+    handle = library.CreateFile(
+        ffi.cast("LPCTSTR", ffi.new("wchar_t[]", lpFileName)),
+        ffi.cast("DWORD", dwDesiredAccess),
+        ffi.cast("DWORD", dwShareMode),
+        lpSecurityAttributes,
+        ffi.cast("DWORD", dwCreationDisposition),
+        ffi.cast("DWORD", dwFlagsAndAttributes),
+        hTemplateFile
+    )
+
+    if handle == INVALID_HANDLE_VALUE:  # pragma: no cover
+        raise WindowsAPIError(
+            "CreateFile", ffi.getwinerror()[-1], INVALID_HANDLE_VALUE,
+            "not %s" % INVALID_HANDLE_VALUE)
+
+    try:
+        error_check("CreateFile")
+
+    # Certain error conditions are actually indications of
+    # success long as the handle is valid.  These are documented
+    # on MSDN for the dwCreationDisposition parameter.
+    except WindowsAPIError as error:
+        if (dwCreationDisposition not in (
+                library.CREATE_ALWAYS, library.OPEN_ALWAYS) or
+                error.code != library.ERROR_ALREADY_EXISTS):
+            raise
+
+    return handle
+
+
+def GetFileInformationByHandle(hFile):
+    """
+    Retrieves information about the specified ``hFile``.
+
+    .. seealso::
+
+        https://msdn.microsoft.com/en-us/library/aa364952
+
+    :param handle hFile:
+        The handle to retrieve information for.
+
+    :returns:
+        Returns an instance of :class:`FileInformation`
+    """
+    input_check("hFile", hFile, Enums.HANDLE)
+
+    ffi, library = dist.load()
+    lpFileInformation = ffi.new("LPBY_HANDLE_FILE_INFORMATION")
+    code = library.GetFileInformationByHandle(hFile, lpFileInformation)
+    error_check(
+        "GetFileInformationByHandle", code=code, expected=Enums.NON_ZERO)
+
+    return FileInformation(
+        dwFileAttributes=lpFileInformation.dwFileAttributes,
+        ftCreationTime=FileTime(
+            dwLowDateTime=lpFileInformation.ftCreationTime.dwLowDateTime,
+            dwHighDateTime=lpFileInformation.ftCreationTime.dwHighDateTime
+        ),
+        ftLastAccessTime=FileTime(
+            dwLowDateTime=lpFileInformation.ftLastAccessTime.dwLowDateTime,
+            dwHighDateTime=lpFileInformation.ftLastAccessTime.dwHighDateTime
+        ),
+        ftLastWriteTime=FileTime(
+            dwLowDateTime=lpFileInformation.ftLastWriteTime.dwLowDateTime,
+            dwHighDateTime=lpFileInformation.ftLastWriteTime.dwHighDateTime
+        ),
+        dwVolumeSerialNumber=lpFileInformation.dwVolumeSerialNumber,
+        nFileSizeHigh=lpFileInformation.nFileSizeHigh,
+        nFileSizeLow=lpFileInformation.nFileSizeLow,
+        nNumberOfLinks=lpFileInformation.nNumberOfLinks,
+        nFileIndexHigh=lpFileInformation.nFileIndexHigh,
+        nFileIndexLow=lpFileInformation.nFileIndexLow
+    )

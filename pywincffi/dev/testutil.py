@@ -19,6 +19,8 @@ except ImportError:  # pragma: no cover
 
 from pywincffi.core.config import config
 from pywincffi.core.logger import get_logger
+from pywincffi.kernel32.handle import CloseHandle
+from pywincffi.kernel32.pipe import CreatePipe
 
 logger = get_logger("core.testutil")
 
@@ -71,3 +73,10 @@ class TestCase(_TestCase):
             self.fail("Expected int for `value`")
 
         return lib.SetLastError(ffi.cast("DWORD", value))
+
+    def create_anonymous_pipes(self, nSize=0, lpPipeAttributes=None):
+        reader, writer = CreatePipe(
+            nSize=nSize, lpPipeAttributes=lpPipeAttributes)
+        self.addCleanup(CloseHandle, reader)
+        self.addCleanup(CloseHandle, writer)
+        return reader, writer
