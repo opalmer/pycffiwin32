@@ -215,10 +215,10 @@ def GetNamedPipeHandleState(hNamedPipe, is_server_side_pipe=False):
     error_check("GetNamedPipeHandleState", code=code, expected=Enums.NON_ZERO)
 
 
-def CreateNamedPipe(
-    lpName, dwOpenMode, dwPipeMode, nMaxInstances, nOutBufferSize,
-    nInBufferSize, nDefaultTimeOut=0, lpSecurityAttributes=None
-):
+def CreateNamedPipe(  # pylint: disable=too-many-arguments
+        lpName, dwOpenMode, dwPipeMode, nMaxInstances, nOutBufferSize,
+        nInBufferSize, nDefaultTimeOut=0, lpSecurityAttributes=None):
+    # pylint: disable=anomalous-backslash-in-string
     """
     Creates a named pipe object and returns a handle.
 
@@ -297,8 +297,7 @@ def CreateNamedPipe(
     if not 1 <= nMaxInstances <= library.PIPE_UNLIMITED_INSTANCES:
         raise InputError(
             "nMaxInstances", nMaxInstances, integer_types,
-            allowed_values=
-            "range 1 to PIPE_UNLIMITED_INSTANCES "
+            allowed_values="range 1 to PIPE_UNLIMITED_INSTANCES "
             "(%s)" % library.PIPE_UNLIMITED_INSTANCES)
 
     handle = library.CreateNamedPipe(
