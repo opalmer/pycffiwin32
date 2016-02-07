@@ -8,6 +8,19 @@ versions are shown first.
 Versions
 --------
 
+0.2.0
+~~~~~
+
+This release contains several enhancements, bug fixes and other
+changes.  You can see all of the major issues by viewing the milestone
+on GitHub: https://github.com/opalmer/pywincffi/issues?q=milestone:0.2.0.
+
+
+Contains a fix to ensure that the proper version of ``cffi`` is
+installed.  See https://github.com/opalmer/pywincffi/pull/45 for more
+detailed information.  This release also includes a fix to the internal
+release tool.
+
 0.1.2
 ~~~~~
 
