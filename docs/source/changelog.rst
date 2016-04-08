@@ -8,6 +8,12 @@ versions are shown first.
 Versions
 --------
 
+latest
+~~~~~~
+
+    * Updated developer documentation to better cover code reviews, style,
+      functions, etc.
+
 0.1.2
 ~~~~~
 
