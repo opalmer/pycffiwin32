@@ -22,13 +22,13 @@ This project uses and reference a lot of constants in Windows.  For
 consistency and readability we should always use Windows constants by name
 rather than hard coding numbers.
 
-For example if you're writing a test this:
+For example if you're writing a test or code like this:
 
 .. code-block:: python
 
    SetHandleInformation(handle, 1, 0)
 
-Should instead be this:
+Then it would be preferable to write:
 
 .. code-block:: python
 
