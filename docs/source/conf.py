@@ -46,7 +46,8 @@ extensions = [
     "sphinx.ext.autodoc",
     "sphinx.ext.intersphinx",
     "sphinx.ext.todo",
-    "sphinx.ext.viewcode"
+    "sphinx.ext.viewcode",
+    "sphinx.ext.extlinks"
 ]
 
 linkcheck_timeout = 60
@@ -335,3 +336,23 @@ def _warn_node(self, msg, node):
         self._warnfunc(msg, '%s:%s' % get_source_line(node))
 
 sphinx.environment.BuildEnvironment.warn_node = _warn_node
+
+
+extlinks = {
+    "issue": (
+        "https://github.com/opalmer/pywincffi/issues/%s",
+        "#"
+    ),
+    "blob": (
+        "https://github.com/opalmer/pywincffi/blob/master/%s",
+        ""
+    ),
+    "msdn": (
+        "https://msdn.microsoft.com/library/%s",
+        ""
+    ),
+    "msdn-full": (
+        "https://msdn.microsoft.com/library/%s",
+        "https://msdn.microsoft.com/library/"
+    )
+}
