@@ -13,6 +13,8 @@ latest
 
     * Updated developer documentation to better cover code reviews, style,
       functions, etc.
+    * Fixed broken urls in `PyCharm Remote Interpreter` section of vagrant
+      documentation for developers.
 
 0.1.2
 ~~~~~
