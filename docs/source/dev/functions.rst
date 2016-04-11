@@ -25,22 +25,38 @@ C Header
 ++++++++
 
 The C header for function definitions is located in
-:blob:`pywincffi/core/cdefs/headers/functions.h`. When creating a new function
-you should essentially match what the msdn documentation defines.  If you're
-implementing `WriteFile` for example you'd look at :msdn:`aa365747` and
-translate this to:
+:blob:`pywincffi/core/cdefs/headers/functions.h` and is sometimes referred to
+the 'cdef'. When creating a new function you should essentially match what the
+msdn documentation defines.  If you're implementing `WriteFile` for example
+you'd look at :msdn:`aa365747` and translate this to:
 
 .. code-block:: c
 
    BOOL WriteFile(HANDLE, LPCVOID, DWORD, LPDWORD, LPOVERLAPPED);
 
-
 It's important to note here that all inputs, output, optional arguments, etc
 are included in the header definition even if you don't plan on exposing them
 from the Python wrapper.
 
+Location of C Definitions
+`````````````````````````
+
+Currently all C definitions reside in
+:blob:`pywincffi/core/cdefs/headers/functions.h`.  Unlike the Python wrapper
+functions, which are discussed below, the C definition is not exposed to
+downstream consumers. The structure of the C definition files also does not
+impact how the wrapper functions are structured either since both pywincffi and
+the downstream consumers consume from :func:`pywincffi.core.dist.load`.
+
+The C definition files could be better organized in the future if necessary.
+As it stands today this would only require minor changes to the
+`HEADER_FILES` and `SOURCE_FILES` globals in :mod:`pywincffi.core.dist`.
+
 Python
 ++++++
+
+Constructing The Wrapper
+````````````````````````
 
 In order to make a Windows function available you need to write a 'wrapper'
 function. Technically speaking it's not a requirement in order to call the
@@ -109,6 +125,56 @@ Here's how the individual arguments would be handled inside of the function:
      an integer can be provided.
    * **lpOverlapped** - Optional according to msdn but someone can pass in
      their own overlapped structure if they wanted.
+
+
+Location Of Wrapper Function
+````````````````````````````
+
+For the most part what module you decide to place `WriteFile` in is up to
+you however the module should be related to the function. `WriteFile` is meant
+to operate on files so it makes sense to include it in a `file` module.  In
+Windows the `kernel32` library defines `WriteFile` so the subpackage the wrapper
+belongs to is also called `kernel32`::
+
+    pywincffi.kernel32.file.WriteFile <---- wrapper function
+        ^         ^     ^
+        |         |     |
+      Root        |     |
+     Package      |     |
+            Subpackage/ |
+            Windows Lib |
+                        |
+                   Object Type
+                       or
+                 Operation Group
+
+New functions which come from other Windows modules should add new top
+level subpackages.
+
+Import Structure
+````````````````
+
+In many Python programs, full import paths are often encouraged.  So to import
+`WriteFile` one would do:
+
+.. code-block:: python
+
+   from pywincffi.kernel32.file import WriteFile
+
+Internally within pywincffi, the above import path should be used. External
+consumers of pywincffi would import the function like this:
+
+.. code-block:: python
+
+   from pywincffi.kernel32 import WriteFile
+
+So when you add a new function be sure to add it to the `__init__.py` for
+the subpackage.  This ensures that if the import structure has to change
+within one of pywincffi's modules we're less likely to break downstream
+consumers.
+
+
+
 
 Argument and Keyword Naming Conventions
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
