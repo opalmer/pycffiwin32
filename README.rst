@@ -74,7 +74,7 @@ Documentation
 -------------
 
 The documentation for this this library is hosted on
-`ReadTheDocs <https://pywincffi.readthedocs.org/>`_.
+`Read The Docs <https://pywincffi.readthedocs.org/>`_.
 It's generated directly from this library using sphinx::
 
     virtualenv env
@@ -123,7 +123,7 @@ reference examples, white papers or other reference which may be useful in
 describing the function.
 
 Adding new functions is covered in greater detail
-`here <https://https://pywincffi.readthedocs.org/en/latest/dev/functions.html>`_
+`here <https://pywincffi.readthedocs.org/en/latest/dev/functions.html>`_
 
 
 Testing
