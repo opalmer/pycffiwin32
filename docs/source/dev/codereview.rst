@@ -21,7 +21,7 @@ What Will Be Reviewed
     * If a new function is being added, review the `function <functions.html>`_
       documentation and make sure the new code matches these expectations.
     * For style issues, the default rule of thumb is to follow PEP8 unless it's
-      something Windows specific then the `function <functions.html>`_
+      something Windows specific.  Then, the `function <functions.html>`_
       documentation should be referenced.
     * Does the new function include documentation?  Are there comments for
       special cases?
