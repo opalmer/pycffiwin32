@@ -179,7 +179,7 @@ of a fake Windows function:
        .. seealso::
 
           <url pointing to the msdn reference for AWindowsFunction>
-          <url pointing to a use case or other usefull information>
+          <url pointing to a use case or other useful information>
 
        :param <python type> variable_name:
            Some information about what variable_name is.  Again, can be pulled
@@ -195,6 +195,8 @@ of a fake Windows function:
            raised.  SomeException should be something that's raised directly
            by AWindowsFunction.
 
+
+       :rtype: <The python type returned.  Required if different from the msdn docs>
        :returns:
            Some information about the return value.  This part of the
            documentation should be excluded if the function does not
@@ -355,7 +357,7 @@ Keywords
 ~~~~~~~~
 In C, there's not really an equivalent to a keyword in Python.  However for
 many of the Windows API functions the msdn documentation may say something
-along the lines of *This parameter can be NULL.*  For pywincffi reasonable
+along the lines of *This parameter can be NULL.*  For pywincffi, reasonable
 default values should be defined where possible so not every argument is
 always required.
 
