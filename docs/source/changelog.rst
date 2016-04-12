@@ -25,6 +25,13 @@ Notable enhancements and changes are:
     * New wrapper function pid_exists().
     * Refactored kernel32 module structure.
     * Several bug fixes to existing tests and functions.
+    * Updated developer documentation to better cover code reviews, style,
+      functions, etc.
+    * Fixed broken urls in `PyCharm Remote Interpreter` section of vagrant
+      documentation for developers.
+    * Added :func:`pywincffi.kernel32.handle.GetHandleInformation` and
+      :func:`pywincffi.kernel32.handle.SetHandleInformation` in
+      :issue:`66` - Thanks exvito!
 
 0.1.2
 ~~~~~
