@@ -7,7 +7,7 @@ from pywincffi.dev.testutil import TestCase
 from pywincffi.exceptions import WindowsAPIError, InputError
 from pywincffi.kernel32 import events  # used by mocks
 from pywincffi.kernel32 import (
-    CloseHandle, CreateEvent, OpenEvent, ResetEvent, WaitForSingleObject)
+    CloseHandle, CreateEvent, OpenEvent)
 
 
 # These tests cause TestPidExists to fail under Python 3.4 so for now
