@@ -1,5 +1,4 @@
 import sys
-import time
 
 from mock import patch
 
@@ -37,6 +36,20 @@ class TestCreateEvent(TestCase):
     def test_create_event_valid_handle(self):
         handle = CreateEvent(False, False)
         CloseHandle(handle)  # will raise exception if the handle is invalid
+
+    def test_non_signaled(self):
+        handle = CreateEvent(False, False)
+        self.addCleanup(CloseHandle, handle)
+        _, library = dist.load()
+        self.assertEqual(
+            WaitForSingleObject(handle, 0), library.WAIT_TIMEOUT)
+
+    def test_signaled(self):
+        handle = CreateEvent(False, True)
+        self.addCleanup(CloseHandle, handle)
+        _, library = dist.load()
+        self.assertEqual(
+            WaitForSingleObject(handle, 0), library.WAIT_OBJECT_0)
 
     def test_creating_duplicate_event_does_not_raise_error(self):
         # Windows raises set the last error to ERROR_ALREADY_EXISTS
@@ -84,9 +97,5 @@ class TestResetEvent(TestCase):
         self.addCleanup(CloseHandle, handle)
         ResetEvent(handle)
 
-        # If the event is not in a signaled state,
-        # because ResetEvent was called, then it should
-        # take >= 1 second to reset the assert statement.
-        start = time.time()
-        WaitForSingleObject(handle, 1000)
-        self.assertGreaterEqual(time.time() - start, 1)
+        _, library = dist.load()
+        self.assertEqual(WaitForSingleObject(handle, 0), library.WAIT_TIMEOUT)
