@@ -7,7 +7,7 @@ from pywincffi.dev.testutil import TestCase
 from pywincffi.exceptions import WindowsAPIError, InputError
 from pywincffi.kernel32 import events  # used by mocks
 from pywincffi.kernel32 import (
-    CloseHandle, CreateEvent, OpenEvent)
+    CloseHandle, CreateEvent, OpenEvent, ResetEvent, WaitForSingleObject)
 
 
 # These tests cause TestPidExists to fail under Python 3.4 so for now
@@ -28,11 +28,6 @@ class TestCreateEvent(TestCase):
     """
     Tests for :func:`pywincffi.kernel32.CreateEvent`
     """
-    def setUp(self):
-        super(TestCreateEvent, self).setUp()
-        if sys.version_info[0:2] == (3, 4):
-            self.skipTest("Not compatible with Python 3.4")
-
     def test_create_event_valid_handle(self):
         handle = CreateEvent(False, False)
         CloseHandle(handle)  # will raise exception if the handle is invalid
@@ -52,6 +47,9 @@ class TestCreateEvent(TestCase):
             WaitForSingleObject(handle, 0), library.WAIT_OBJECT_0)
 
     def test_creating_duplicate_event_does_not_raise_error(self):
+        if sys.version_info[0:2] == (3, 4):
+            self.skipTest("Not compatible with Python 3.4")
+
         # Windows raises set the last error to ERROR_ALREADY_EXISTS
         # if an event object with the same name already exists.  The
         # pywincffi API ignores this error and returns the handle
@@ -71,6 +69,9 @@ class TestCreateEvent(TestCase):
                 CreateEvent(False, False)
 
     def test_can_retrieve_named_event(self):
+        if sys.version_info[0:2] == (3, 4):
+            self.skipTest("Not compatible with Python 3.4")
+
         _, library = dist.load()
         name = "pywincffi-%s" % self.random_string(5)
         handle = CreateEvent(False, False, lpName=name)
