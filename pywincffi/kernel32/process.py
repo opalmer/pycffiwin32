@@ -225,4 +225,3 @@ def TerminateProcess(hProcess, uExitCode):
         ffi.cast("UINT", uExitCode)
     )
     error_check("TerminateProcess", code=code, expected=Enums.NON_ZERO)
-
