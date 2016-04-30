@@ -10,7 +10,7 @@ from pywincffi.kernel32 import (
     CloseHandle, CreateEvent, OpenEvent, ResetEvent, WaitForSingleObject)
 
 
-# These tests cause TestPidExists to fail under Python 3.4 so for now
+# These tests cause TestPidExists and others to fail under Python 3.4 so for now
 # we skip these tests.  Because we're only testing CreateEvent, and
 # TestPidExists worked before TestCreateEvent exists, we'll skip these
 # for now.
@@ -28,6 +28,11 @@ class TestCreateEvent(TestCase):
     """
     Tests for :func:`pywincffi.kernel32.CreateEvent`
     """
+    def setUp(self):
+        super(TestCreateEvent, self).setUp()
+        if sys.version_info[0:2] == (3, 4):
+            self.skipTest("Skipped on Python 3.4, see comments.")
+
     def test_create_event_valid_handle(self):
         handle = CreateEvent(False, False)
         CloseHandle(handle)  # will raise exception if the handle is invalid
