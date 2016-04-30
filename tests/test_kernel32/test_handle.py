@@ -292,7 +292,7 @@ class TestDuplicateHandle(TestCase):
     """
     Integration tests for :func:`pywincffi.kernel32.DuplicateHandle`
     """
-    def test_basic_duplication(self):
+    def test_duplication(self):
         event = CreateEvent(False, False)
         self.addCleanup(CloseHandle, event)
 
@@ -302,7 +302,9 @@ class TestDuplicateHandle(TestCase):
             event,
             GetCurrentProcess(),
             0,
-            False,
+            True,
             library.DUPLICATE_SAME_ACCESS
         )
         self.addCleanup(CloseHandle, handle)
+        info = GetHandleInformation(handle)
+        self.assertEqual(info, library.HANDLE_FLAG_INHERIT)
