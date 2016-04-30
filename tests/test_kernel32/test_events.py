@@ -10,8 +10,8 @@ from pywincffi.kernel32 import (
     CloseHandle, CreateEvent, OpenEvent, ResetEvent, WaitForSingleObject)
 
 
-# These tests cause TestPidExists and others to fail under Python 3.4 so for now
-# we skip these tests.  Because we're only testing CreateEvent, and
+# These tests cause TestPidExists and others to fail under Python 3.4 so for
+# now we skip these tests.  Because we're only testing CreateEvent, and
 # TestPidExists worked before TestCreateEvent exists, we'll skip these
 # for now.
 #  Traceback (most recent call last):
