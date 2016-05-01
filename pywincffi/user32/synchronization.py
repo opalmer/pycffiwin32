@@ -57,10 +57,11 @@ def MsgWaitForMultipleObjects(
         return.  See Microsoft's documentation for full details on what
         this could be.
     """
+    input_check("pHandles", pHandles, (list, tuple))
+
     if nCount is None:
         nCount = len(pHandles)
 
-    input_check("pHandles", pHandles, (list, tuple))
     input_check("bWaitAll", bWaitAll, bool)
     input_check("dwMilliseconds", dwMilliseconds, integer_types)
     input_check("dwWakeMask", dwWakeMask, integer_types)
