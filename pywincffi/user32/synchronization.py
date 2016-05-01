@@ -14,7 +14,7 @@ library.
 from six import integer_types
 
 from pywincffi.core import dist
-from pywincffi.core.checks import input_check
+from pywincffi.core.checks import Enums, input_check
 from pywincffi.exceptions import WindowsAPIError
 
 
@@ -66,11 +66,16 @@ def MsgWaitForMultipleObjects(
     input_check("dwWakeMask", dwWakeMask, integer_types)
     input_check("nCount", nCount, integer_types)
 
+    # Iterate over all of the object in pHandles.  Each object
+    # should be a handle.
+    for i, item in enumerate(pHandles):
+        input_check("pHandles[%d]" % i, item, Enums.HANDLE)
+
     ffi, library = dist.load()
 
     code = library.MsgWaitForMultipleObjects(
         nCount,
-        pHandles,
+        ffi.new("const PHANDLE[%d]" % nCount, pHandles),
         bWaitAll,
         dwMilliseconds,
         dwWakeMask
