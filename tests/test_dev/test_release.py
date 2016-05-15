@@ -17,6 +17,7 @@ except ImportError:
 
 from mock import Mock, patch
 from requests.adapters import HTTPAdapter
+from six import PY3
 
 from pywincffi.core.config import config
 from pywincffi.dev import release  # used to mock top level functions
@@ -81,14 +82,25 @@ class TestSession(TestCase):
     """
     REQUIRES_INTERNET = True
     DOWNLOAD_SHA1 = "b34ffce316e11eebc5b2ceb4398a9606630c72bf"
-    DOWNLOAD_URL = \
+    DOWNLOAD_URL_TEMPLATE = \
         "https://raw.githubusercontent.com/opalmer/pywincffi/" \
-        "master/.ci/appveyor/run_with_compiler.cmd"
+        "{branch}/.ci/appveyor/run_with_compiler.cmd"
 
     def setUp(self):
         super(TestSession, self).setUp()
         self.session = Session.session
         self.session.mount("https://", HTTPAdapter(max_retries=100))
+
+        # Get the current branch.  This ensures that if the SHA1 changes
+        # then the test breaks in the working branch rather than when
+        # the commit hits master.
+        branch = subprocess.check_output(
+            ["git", "symbolic-ref", "-q", "--short", "HEAD"]).strip()
+
+        if PY3:
+            branch = branch.decode("utf-8")
+
+        self.download_url = self.DOWNLOAD_URL_TEMPLATE.format(branch=branch)
 
     def test_check_code_success(self):
         response = self.session.get(AppVeyor.API)
@@ -109,7 +121,13 @@ class TestSession(TestCase):
             Session.json(AppVeyor.API)
 
     def test_download_random_path(self):
-        path = Session.download(self.DOWNLOAD_URL)
+        try:
+            path = Session.download(self.download_url)
+        except RuntimeError as error:
+            if "Got 404 Not Found instead" in error.args[0]:
+                self.fail("Remote branch appears to be missing")
+            raise
+
         self.addCleanup(os.remove, path)
         with open(path, "rb") as file_:
             sha1 = hashlib.sha1(file_.read())
@@ -121,7 +139,13 @@ class TestSession(TestCase):
         os.close(fd)
         self.addCleanup(os.remove, path)
 
-        Session.download(self.DOWNLOAD_URL, path=path)
+        try:
+            Session.download(self.download_url, path=path)
+        except RuntimeError as error:
+            if "Got 404 Not Found instead" in error.args[0]:
+                self.fail("Remote branch appears to be missing")
+            raise
+
         with open(path, "rb") as file_:
             sha1 = hashlib.sha1(file_.read())
 
