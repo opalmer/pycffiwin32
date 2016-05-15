@@ -76,20 +76,15 @@ class TestWheel(TestCase):
             self.assertTrue(check_wheel(path), path)
 
 
-class TestSession(TestCase):
-    """
-    Tests for constants of :class:`pywincffi.dev.release.Session`
-    """
+class TestDownloadBase(TestCase):
     REQUIRES_INTERNET = True
     DOWNLOAD_SHA1 = "b34ffce316e11eebc5b2ceb4398a9606630c72bf"
     DOWNLOAD_URL_TEMPLATE = \
-        "https://raw.githubusercontent.com/opalmer/pywincffi/" \
+        "https://raw.githubusercontent.com/{repo}/" \
         "{branch}/.ci/appveyor/run_with_compiler.cmd"
 
     def setUp(self):
-        super(TestSession, self).setUp()
-        self.session = Session.session
-        self.session.mount("https://", HTTPAdapter(max_retries=100))
+        super(TestDownloadBase, self).setUp()
 
         # Get the current branch.  This ensures that if the SHA1 changes
         # then the test breaks in the working branch rather than when
@@ -97,10 +92,26 @@ class TestSession(TestCase):
         branch = subprocess.check_output(
             ["git", "symbolic-ref", "-q", "--short", "HEAD"]).strip()
 
+        repo = subprocess.check_output(
+            ["git", "config", "remote.origin.url"]).strip()
+
         if PY3:
             branch = branch.decode("utf-8")
+            repo = repo.decode("utf-8")
 
-        self.download_url = self.DOWNLOAD_URL_TEMPLATE.format(branch=branch)
+        self.download_url = self.DOWNLOAD_URL_TEMPLATE.format(
+            branch=branch, repo=repo.split(":")[-1]
+        )
+
+
+class TestSession(TestDownloadBase):
+    """
+    Tests for constants of :class:`pywincffi.dev.release.Session`
+    """
+    def setUp(self):
+        super(TestSession, self).setUp()
+        self.session = Session.session
+        self.session.mount("https://", HTTPAdapter(max_retries=100))
 
     def test_check_code_success(self):
         response = self.session.get(AppVeyor.API)
@@ -152,12 +163,10 @@ class TestSession(TestCase):
         self.assertEqual(sha1.hexdigest(), self.DOWNLOAD_SHA1)
 
 
-class TestAppVeyor(TestCase):
+class TestAppVeyor(TestDownloadBase):
     """
     Tests for constants of :class:`pywincffi.dev.release.AppVeyor`
     """
-    REQUIRES_INTERNET = True
-
     def setUp(self):
         super(TestAppVeyor, self).setUp()
         self.job_id = random_string()
@@ -196,7 +205,7 @@ class TestAppVeyor(TestCase):
 
     def test_downloads_artifacts(self):
         artifacts = [
-            {"type": "File", "fileName": basename(TestSession.DOWNLOAD_URL)}
+            {"type": "File", "fileName": basename(self.download_url)}
         ]
 
         _download = Session.download
@@ -212,7 +221,7 @@ class TestAppVeyor(TestCase):
             self.artifact_path = path
             self.artifact_url = expected_url
 
-            _download(TestSession.DOWNLOAD_URL, path=path)
+            _download(self.download_url, path=path)
 
         with patch.object(Session, "json", return_value=artifacts):
             with patch.object(Session, "download", download):
@@ -238,7 +247,7 @@ class TestAppVeyor(TestCase):
         self.artifact_url = None
 
         def download(_, url, path=None):
-            _download(TestSession.DOWNLOAD_URL, path=path)
+            _download(self.download_url, path=path)
 
         with patch.object(Session, "json", return_value=artifacts):
             with patch.object(Session, "download", download):
@@ -257,7 +266,7 @@ class TestAppVeyor(TestCase):
         self.addCleanup(shutil.rmtree, directory, ignore_errors=True)
 
         def download(_, url, path=None):
-            _download(TestSession.DOWNLOAD_URL, path=path)
+            _download(self.download_url, path=path)
 
         with patch.object(release, "check_wheel") as mocked:
             with patch.object(Session, "json", return_value=artifacts):
