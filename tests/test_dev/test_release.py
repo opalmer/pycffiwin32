@@ -86,6 +86,9 @@ class TestDownloadBase(TestCase):
     def setUp(self):
         super(TestDownloadBase, self).setUp()
 
+        if sys.version_info[0:2] == (2, 6):
+            self.skipTest("subprocess.check_output not implemented")
+
         # Get the current branch.  This ensures that if the SHA1 changes
         # then the test breaks in the working branch rather than when
         # the commit hits master.
