@@ -95,8 +95,11 @@ class TestDownloadBase(TestCase):
         repo = subprocess.check_output(
             ["git", "config", "remote.origin.url"]).strip()
 
-        if PY3:  # pylint: disable=redefined-variable-type
+        if PY3:
+            # pylint: disable=redefined-variable-type
             branch = branch.decode("utf-8")
+
+            # pylint: disable=redefined-variable-type
             repo = repo.decode("utf-8")
 
         self.download_url = self.DOWNLOAD_URL_TEMPLATE.format(
