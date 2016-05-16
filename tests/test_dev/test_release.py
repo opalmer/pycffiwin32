@@ -17,7 +17,6 @@ except ImportError:
 
 from mock import Mock, patch
 from requests.adapters import HTTPAdapter
-from six import PY3
 
 from pywincffi.core.config import config
 from pywincffi.dev import release  # used to mock top level functions
@@ -78,36 +77,11 @@ class TestWheel(TestCase):
 
 class TestDownloadBase(TestCase):
     REQUIRES_INTERNET = True
+    COMMIT = "fff6dff13502f7431210cbd8b1f64e2e4eea6475"
     DOWNLOAD_SHA1 = "b34ffce316e11eebc5b2ceb4398a9606630c72bf"
-    DOWNLOAD_URL_TEMPLATE = \
-        "https://raw.githubusercontent.com/{repo}/" \
-        "{branch}/.ci/appveyor/run_with_compiler.cmd"
-
-    def setUp(self):
-        super(TestDownloadBase, self).setUp()
-
-        if sys.version_info[0:2] == (2, 6):
-            self.skipTest("subprocess.check_output not implemented")
-
-        # Get the current branch.  This ensures that if the SHA1 changes
-        # then the test breaks in the working branch rather than when
-        # the commit hits master.
-        branch = subprocess.check_output(
-            ["git", "symbolic-ref", "-q", "--short", "HEAD"]).strip()
-
-        repo = subprocess.check_output(
-            ["git", "config", "remote.origin.url"]).strip()
-
-        if PY3:
-            # pylint: disable=redefined-variable-type
-            branch = branch.decode("utf-8")
-
-            # pylint: disable=redefined-variable-type
-            repo = repo.decode("utf-8")
-
-        self.download_url = self.DOWNLOAD_URL_TEMPLATE.format(
-            branch=branch, repo=repo.split(":")[-1]
-        )
+    DOWNLOAD_URL = \
+        "https://raw.githubusercontent.com/opalmer/pywincffi/" \
+        "%s/.ci/appveyor/run_with_compiler.cmd" % COMMIT
 
 
 class TestSession(TestDownloadBase):
@@ -139,7 +113,7 @@ class TestSession(TestDownloadBase):
 
     def test_download_random_path(self):
         try:
-            path = Session.download(self.download_url)
+            path = Session.download(self.DOWNLOAD_URL)
         except RuntimeError as error:
             if "Got 404 Not Found instead" in error.args[0]:
                 self.fail("Remote branch appears to be missing")
@@ -157,7 +131,7 @@ class TestSession(TestDownloadBase):
         self.addCleanup(os.remove, path)
 
         try:
-            Session.download(self.download_url, path=path)
+            Session.download(self.DOWNLOAD_URL, path=path)
         except RuntimeError as error:
             if "Got 404 Not Found instead" in error.args[0]:
                 self.fail("Remote branch appears to be missing")
@@ -211,7 +185,7 @@ class TestAppVeyor(TestDownloadBase):
 
     def test_downloads_artifacts(self):
         artifacts = [
-            {"type": "File", "fileName": basename(self.download_url)}
+            {"type": "File", "fileName": basename(self.DOWNLOAD_URL)}
         ]
 
         _download = Session.download
@@ -227,7 +201,7 @@ class TestAppVeyor(TestDownloadBase):
             self.artifact_path = path
             self.artifact_url = expected_url
 
-            _download(self.download_url, path=path)
+            _download(self.DOWNLOAD_URL, path=path)
 
         with patch.object(Session, "json", return_value=artifacts):
             with patch.object(Session, "download", download):
@@ -253,7 +227,7 @@ class TestAppVeyor(TestDownloadBase):
         self.artifact_url = None
 
         def download(_, url, path=None):
-            _download(self.download_url, path=path)
+            _download(self.DOWNLOAD_URL, path=path)
 
         with patch.object(Session, "json", return_value=artifacts):
             with patch.object(Session, "download", download):
@@ -272,7 +246,7 @@ class TestAppVeyor(TestDownloadBase):
         self.addCleanup(shutil.rmtree, directory, ignore_errors=True)
 
         def download(_, url, path=None):
-            _download(self.download_url, path=path)
+            _download(self.DOWNLOAD_URL, path=path)
 
         with patch.object(release, "check_wheel") as mocked:
             with patch.object(Session, "json", return_value=artifacts):
