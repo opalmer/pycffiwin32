@@ -216,7 +216,8 @@ class TestLockFileEx(LockFileCase):
 
         with self.assertRaises(subprocess.CalledProcessError):
             subprocess.check_call([
-                sys.executable, "-c", "open(%r, 'r').read()" % self.path])
+                sys.executable, "-c", "open(%r, 'r').read()" % self.path],
+                stderr=subprocess.PIPE)
 
     def test_no_lock_allows_subprocess_read_python3(self):
         # This makes sure that if the default behavior changes or varies
@@ -224,7 +225,8 @@ class TestLockFileEx(LockFileCase):
         # to ensure that test_lock_causes_subprocess_read_failure() is really
         # testing the behavior of LockFileEx()
         subprocess.check_call([
-            sys.executable, "-c", "open(%r, 'r').read()" % self.path])
+            sys.executable, "-c", "open(%r, 'r').read()" % self.path],
+            stderr=subprocess.PIPE)
 
 
 class TestUnlockFileEx(LockFileCase):
@@ -241,7 +243,8 @@ class TestUnlockFileEx(LockFileCase):
 
         with self.assertRaises(subprocess.CalledProcessError):
             subprocess.check_call([
-                sys.executable, "-c", "open(%r, 'r').read()" % self.path])
+                sys.executable, "-c", "open(%r, 'r').read()" % self.path],
+                stderr=subprocess.PIPE)
 
         UnlockFileEx(self.handle, 0, 1024)
 
