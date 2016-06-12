@@ -31,6 +31,8 @@ Notable enhancements and changes are:
     * All exposed APIs now explicitly require either text or binary data.
     * Added FOREGROUND_RED, FOREGROUND_GREEN and FOREGROUND_BLUE constants in
       :issue:`95`.
+    * Improved documentation for :class:`pywincffi.exceptions.InputError` and
+      added the ability to generate custom error messages.
 
 0.2.0
 ~~~~~
