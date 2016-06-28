@@ -46,3 +46,16 @@ class HANDLE(CFFICDataWrapper, ObjectMixin):
         if isinstance(data, type(self._cdata[0])):
             if ffi.typeof(data) == ffi.typeof(self._cdata[0]):
                 self._cdata[0] = data
+
+
+class SOCKET(CFFICDataWrapper, ObjectMixin):
+    """Handles interaction with a SOCKET object via its cdata"""
+    def __init__(self, data=None):
+        ffi, _ = dist.load()
+        super(SOCKET, self).__init__("SOCKET[1]", ffi)
+
+        # Initialize from a <cdata handle> object as returned by some
+        # Windows API library calls: Python AND FFI types must be equal.
+        if isinstance(data, type(self._cdata[0])):
+            if ffi.typeof(data) == ffi.typeof(self._cdata[0]):
+                self._cdata[0] = data

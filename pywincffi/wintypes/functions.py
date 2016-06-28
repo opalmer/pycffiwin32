@@ -6,9 +6,11 @@ This module provides various functions for converting and using Windows
 types.
 """
 
+import socket
+
 from pywincffi.core import dist
 from pywincffi.exceptions import InputError
-from pywincffi.wintypes.objects import HANDLE
+from pywincffi.wintypes.objects import HANDLE, SOCKET
 
 
 # pylint: disable=protected-access
@@ -74,3 +76,33 @@ def handle_from_file(file_):
     else:
         _, library = dist.load()
         return HANDLE(library.handle_from_fd(fileno))
+
+
+def socket_from_object(sock):
+    """
+    Converts a Python socket to a Windows SOCKET object.
+
+    :param socket._socketobject sock:
+        The Python socket to convert to :class:`pywincffi.wintypes.SOCKET`
+        object.
+
+    :rtype: :class:`pywincffi.wintypes.SOCKET`
+    """
+    if not isinstance(sock, socket._socketobject):
+        raise InputError(
+            "sock", sock, expected_types=None,
+            message="Expected a Python socket object for `sock`")
+
+    try:
+        fileno = sock.fileno()
+    except AttributeError:
+        raise InputError(
+            "sock", sock, expected_types=None,
+            message="Expected a Python socket object for `sock`")
+    except socket.error as error:
+        raise InputError(
+            "sock", sock, expected_types=None,
+            message="Invalid socket object (error: %s)" % error)
+    else:
+        _, library = dist.load()
+        return SOCKET(library.socket_from_fd(fileno))
