@@ -224,6 +224,11 @@ BOOL WINAPI ResetEvent(
 // Communications
 ///////////////////////
 
+// https://msdn.microsoft.com/en-us/ms737582
+int closesocket(
+  _In_ SOCKET s
+);
+
 // https://msdn.microsoft.com/en-us/aa363180
 BOOL WINAPI ClearCommError(
   _In_      HANDLE    hFile,
@@ -237,5 +242,4 @@ int WSAGetLastError(void);
 // Conversion Functions
 ///////////////////////
 HANDLE handle_from_fd(int);
-HANDLE socket_from_fd(int);
-int closesocket(SOCKET);
+SOCKET socket_from_fileno(int...);
