@@ -30,9 +30,9 @@ class WrappedObject(CFFICDataWrapper):
 
         # Initialize from a <cdata handle> object as returned by some
         # Windows API library calls: Python AND FFI types must be equal.
-        if isinstance(data, type(self._cdata[0])):
-            if ffi.typeof(data) == ffi.typeof(self._cdata[0]):
-                self._cdata[0] = data
+        if (isinstance(data, ffi.CData) and
+                ffi.typeof(data) == ffi.typeof(self._cdata[0])):
+            self._cdata[0] = data
 
     def __repr__(self):
         ffi, _ = dist.load()
