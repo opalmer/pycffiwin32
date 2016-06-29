@@ -145,8 +145,6 @@ BOOL WINAPI UnlockFileEx(
 // Files
 ///////////////////////
 
-HANDLE handle_from_fd(int);
-
 // https://msdn.microsoft.com/en-us/ms724211
 BOOL WINAPI CloseHandle(
   _In_ HANDLE hObject
@@ -232,3 +230,10 @@ BOOL WINAPI ClearCommError(
   _Out_opt_ LPDWORD   lpErrors,
   _Out_opt_ LPCOMSTAT lpStat
 );
+
+
+///////////////////////
+// Conversion Functions
+///////////////////////
+HANDLE handle_from_fd(int);
+SOCKET socket_from_fd(int);
