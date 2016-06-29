@@ -111,4 +111,6 @@ def socket_from_object(sock):
             message="Invalid socket object (error: %s)" % error)
     else:
         ffi, _ = dist.load()
-        return SOCKET(ffi.cast("SOCKET", fileno))
+        sock = SOCKET()
+        sock._cdata[0] = ffi.cast("SOCKET", fileno)
+        return sock

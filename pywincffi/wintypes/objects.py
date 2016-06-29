@@ -6,15 +6,34 @@ Provides wrappers around core Windows objects such as file handles, sockets,
 etc.
 """
 
-# NOTE: This module should *not* import other modules from wintypes.
-from six import integer_types
+# pylint: disable=too-few-public-methods
 
+# NOTE: This module should *not* import other modules from wintypes.
 from pywincffi.core import dist
 from pywincffi.core.typesbase import CFFICDataWrapper
 
 
-class ObjectMixin(object):  # pylint: disable=too-few-public-methods
-    """A mixin which is used by object classes to share common code."""
+class WrappedObject(CFFICDataWrapper):
+    """
+    A wrapper used by other objects in this module to share common
+    methods and conversion.
+    """
+    C_TYPE = None
+
+    def __init__(self, data=None):
+        ffi, _ = dist.load()
+
+        if self.C_TYPE is None:
+            raise NotImplementedError("`C_TYPE` has not been declared")
+
+        super(WrappedObject, self).__init__(self.C_TYPE, ffi=ffi)
+
+        # Initialize from a <cdata handle> object as returned by some
+        # Windows API library calls: Python AND FFI types must be equal.
+        if isinstance(data, type(self._cdata[0])):
+            if ffi.typeof(data) == ffi.typeof(self._cdata[0]):
+                self._cdata[0] = data
+
     def __repr__(self):
         ffi, _ = dist.load()
         return "<%s 0x%x at 0x%x>" % (
@@ -32,32 +51,15 @@ class ObjectMixin(object):  # pylint: disable=too-few-public-methods
         return self._cdata[0] == other._cdata[0]
 
 
-# pylint: disable=too-few-public-methods,protected-access
-class HANDLE(CFFICDataWrapper, ObjectMixin):
+class HANDLE(WrappedObject):
     """
     .. seealso::
 
         https://msdn.microsoft.com/en-us/library/aa383751
     """
-    def __init__(self, data=None):
-        ffi, _ = dist.load()
-        super(HANDLE, self).__init__("HANDLE[1]", ffi)
-
-        # Initialize from a <cdata handle> object as returned by some
-        # Windows API library calls: Python AND FFI types must be equal.
-        if isinstance(data, type(self._cdata[0])):
-            if ffi.typeof(data) == ffi.typeof(self._cdata[0]):
-                self._cdata[0] = data
+    C_TYPE = "HANDLE[1]"
 
 
-class SOCKET(CFFICDataWrapper, ObjectMixin):
+class SOCKET(WrappedObject):
     """Handles interaction with a SOCKET object via its cdata"""
-    def __init__(self, data=None):
-        ffi, _ = dist.load()
-        super(SOCKET, self).__init__("SOCKET[1]", ffi)
-
-        if (data is not None and not
-                isinstance(data, tuple(list(integer_types) + [ffi.CData]))):
-            raise TypeError("Expected integer or CData object for `data`")
-
-        self._cdata[0] = data
+    C_TYPE = "SOCKET[1]"
