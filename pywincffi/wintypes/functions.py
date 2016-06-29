@@ -110,5 +110,5 @@ def socket_from_object(sock):
             "sock", sock, expected_types=None,
             message="Invalid socket object (error: %s)" % error)
     else:
-        _, library = dist.load()
-        return SOCKET(library.socket_from_fileno(fileno))
+        ffi, _ = dist.load()
+        return SOCKET(ffi.cast("SOCKET", fileno))

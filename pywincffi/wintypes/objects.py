@@ -56,7 +56,8 @@ class SOCKET(CFFICDataWrapper, ObjectMixin):
         ffi, _ = dist.load()
         super(SOCKET, self).__init__("SOCKET[1]", ffi)
 
-        if data is not None and not isinstance(data, integer_types):
-            raise TypeError("Expected a number for `data`")
+        if (data is not None and not
+                isinstance(data, tuple(list(integer_types) + [ffi.CData]))):
+            raise TypeError("Expected integer or CData object for `data`")
 
         self._cdata[0] = data

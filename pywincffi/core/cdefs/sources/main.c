@@ -1,6 +1,5 @@
 #include <io.h>
 #include <winsock2.h>
-#include <winerror.h>
 #include <windows.h>
 #include <TlHelp32.h>
 
@@ -29,11 +28,4 @@
 
 HANDLE handle_from_fd(int fd) {
     return (HANDLE)_get_osfhandle(fd);
-}
-
-
-// Takes the file number of a socket and converts it to
-// a Windows SOCKET object.
-SOCKET socket_from_fileno(int fileno) {
-    return (SOCKET)fileno;
 }
