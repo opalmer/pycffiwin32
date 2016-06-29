@@ -8,6 +8,6 @@ used across the exposed APIs.
 
 from pywincffi.wintypes.functions import (
     wintype_to_cdata, handle_from_file, socket_from_object)
-from pywincffi.wintypes.objects import HANDLE
+from pywincffi.wintypes.objects import HANDLE, SOCKET
 from pywincffi.wintypes.structures import (
     SECURITY_ATTRIBUTES, OVERLAPPED, FILETIME)

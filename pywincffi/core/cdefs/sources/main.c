@@ -1,4 +1,6 @@
 #include <io.h>
+#include <winsock2.h>
+#include <winerror.h>
 #include <windows.h>
 #include <TlHelp32.h>
 #include <Python.h>
@@ -51,6 +53,7 @@ HANDLE handle_from_fd(int fd) {
 
 // Takes a file descriptor from a Python socket and converts
 // it to a Windows SOCKET object.
-SOCKET socket_from_fd(int fd) {
-    return (SOCKET)PyLong_FromSocket_t(fd);
+HANDLE socket_from_fd(int fd) {
+    int value = (int)PyLong_FromSocket_t(fd);
+    return handle_from_fd(value);
 }

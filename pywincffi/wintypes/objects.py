@@ -7,6 +7,8 @@ etc.
 """
 
 # NOTE: This module should *not* import other modules from wintypes.
+from six import integer_types
+
 from pywincffi.core import dist
 from pywincffi.core.typesbase import CFFICDataWrapper
 
@@ -54,8 +56,7 @@ class SOCKET(CFFICDataWrapper, ObjectMixin):
         ffi, _ = dist.load()
         super(SOCKET, self).__init__("SOCKET[1]", ffi)
 
-        # Initialize from a <cdata handle> object as returned by some
-        # Windows API library calls: Python AND FFI types must be equal.
-        if isinstance(data, type(self._cdata[0])):
-            if ffi.typeof(data) == ffi.typeof(self._cdata[0]):
-                self._cdata[0] = data
+        if data is not None and not isinstance(data, integer_types):
+            raise TypeError("Expected a number for `data`")
+
+        self._cdata[0] = data

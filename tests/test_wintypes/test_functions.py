@@ -1,11 +1,12 @@
 import os
+import socket
 import tempfile
 from errno import EBADF
 
 from pywincffi.dev.testutil import TestCase
 from pywincffi.exceptions import InputError
 from pywincffi.kernel32 import CloseHandle
-from pywincffi.wintypes import handle_from_file
+from pywincffi.wintypes import SOCKET, handle_from_file, socket_from_object
 
 try:
     WindowsError
@@ -15,7 +16,7 @@ except NameError:  # pragma: no cover
 
 class TestGetHandleFromFile(TestCase):
     """
-    Tests for :func:`pywincffi.kernel32.handle_from_file`
+    Tests for :func:`pywincffi.wintypes.handle_from_file`
     """
     def test_fails_if_not_a_file(self):
         with self.assertRaises(InputError):
@@ -51,3 +52,26 @@ class TestGetHandleFromFile(TestCase):
             self.assertEqual(error.errno, EBADF)
         else:
             self.fail("Expected os.close(%r) to fail" % fd)
+
+
+class TestSocketFromObject(TestCase):
+    """
+    Tests for :func:`pywincffi.wintypes.socket_from_object`
+    """
+    def test_type(self):
+        with self.assertRaises(InputError):
+            socket_from_object(0)
+
+    def test_error_if_socket_is_closed(self):
+        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        sock.close()
+        with self.assertRaises(InputError):
+            socket_from_object(sock)
+
+    def test_return_type(self):
+        sock = socket_from_object(
+            socket.socket(socket.AF_INET, socket.SOCK_STREAM))
+        self.assertIsInstance(sock, SOCKET)
+        self.addCleanup(CloseHandle, sock)
+
+

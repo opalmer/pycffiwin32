@@ -60,7 +60,7 @@ HEADER_FILES = (
 SOURCE_FILES = (
     resource_filename(
         "pywincffi", join("core", "cdefs", "sources", "main.c")), )
-LIBRARIES = ("kernel32", "user32")
+LIBRARIES = ("kernel32", "user32", "Ws2_32")
 REGEX_SAL_ANNOTATION = re.compile(
     r"\b(_In_|_Inout_|_Out_|_Outptr_|_Reserved_)(opt_)?\b")
 

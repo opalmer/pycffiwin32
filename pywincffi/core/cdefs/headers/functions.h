@@ -231,9 +231,11 @@ BOOL WINAPI ClearCommError(
   _Out_opt_ LPCOMSTAT lpStat
 );
 
+int WSAGetLastError(void);
 
 ///////////////////////
 // Conversion Functions
 ///////////////////////
 HANDLE handle_from_fd(int);
-SOCKET socket_from_fd(int);
+HANDLE socket_from_fd(int);
+int closesocket(SOCKET);
