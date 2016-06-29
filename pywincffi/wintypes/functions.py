@@ -12,6 +12,12 @@ from pywincffi.core import dist
 from pywincffi.exceptions import InputError
 from pywincffi.wintypes.objects import HANDLE, SOCKET
 
+try:
+    # pylint: disable=no-member
+    SOCKET_TYPE = socket._socketobject
+except AttributeError:  # Python 3
+    SOCKET_TYPE = socket.socket
+
 
 # pylint: disable=protected-access
 def wintype_to_cdata(wintype):
@@ -88,7 +94,7 @@ def socket_from_object(sock):
 
     :rtype: :class:`pywincffi.wintypes.SOCKET`
     """
-    if not isinstance(sock, socket._socketobject):
+    if not isinstance(sock, SOCKET_TYPE):
         raise InputError(
             "sock", sock, expected_types=None,
             message="Expected a Python socket object for `sock`")
