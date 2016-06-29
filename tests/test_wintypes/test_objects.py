@@ -1,6 +1,30 @@
 from pywincffi.core import dist
 from pywincffi.dev.testutil import TestCase
-from pywincffi.wintypes import HANDLE, SOCKET
+from pywincffi.wintypes import WrappedObject, HANDLE, SOCKET
+
+
+class TestWrappedObject(TestCase):
+    """
+    Tests for :class:`pywincffi.wintypes.WrappedObject`
+    """
+    def test_instantiate_without_arguments(self):
+        class INT(WrappedObject):
+            C_TYPE = "int[1]"
+
+        # This should always pass, it's a breaking change otherwise.
+        INT()
+
+    def test_requires_c_type(self):
+        with self.assertRaises(NotImplementedError):
+            WrappedObject()
+
+    def test_declares_proper_cname(self):
+        class INT(WrappedObject):
+            C_TYPE = "int[1]"
+
+        ffi, _ = dist.load()
+        int_ = INT()
+        self.assertEqual(ffi.typeof(int_._cdata).cname, INT.C_TYPE)
 
 
 class ObjectBaseTestCase(TestCase):
@@ -25,6 +49,10 @@ class ObjectBaseTestCase(TestCase):
     def test_instantiate(self):
         h = self.OBJECT_CLASS()  # pylint: disable=not-callable
         self.assertIsInstance(h, self.OBJECT_CLASS)
+
+    def test_is_wrapped_object(self):
+        # pylint: disable=not-callable
+        self.assertIsInstance(self.OBJECT_CLASS(), WrappedObject)
 
     def test_compare_equal_highlevel(self):
         h1 = self.OBJECT_CLASS()  # pylint: disable=not-callable
