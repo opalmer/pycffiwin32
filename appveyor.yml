@@ -80,6 +80,9 @@ test_script:
   - "%PYTHON%\\Scripts\\coverage.exe xml"
   - "%PYTHON%\\Scripts\\codecov.exe --required"
 
+  # Linters and other checks
+  - "%WITH_COMPILER% C:\\project\\.ci\\appveyor\\linters.cmd"
+
 artifacts:
   - path: dist\*.whl
   - path: dist\*.msi
