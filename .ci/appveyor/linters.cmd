@@ -13,7 +13,8 @@ IF NOT "%PYTHON_VERSION%" == "2.6.x" (
     %PYTHON%\\Scripts\\pylint.exe pywincffi --reports no || EXIT 1
 ) ELSE (
     %PYTHON%\\Scripts\\pylint.exe pywincffi --reports no ^
-        --disable bad-option-value,unpacking-non-sequence,maybe-no-member || EXIT 1
+        --disable bad-option-value,unpacking-non-sequence,maybe-no-member, ^
+        --disable star-args || EXIT 1
 )
 
 %PYTHON%\\Scripts\\pylint.exe tests --reports no ^
