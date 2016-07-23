@@ -8,7 +8,6 @@ python:
 
 env:
   - READTHEDOCS=1
-  - PYLINT=1
 
 install:
   - source .ci/travis/retry.sh
