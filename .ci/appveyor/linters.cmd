@@ -1,5 +1,3 @@
-@ECHO OFF
-
 IF "%PYTHON_VERSION%" == "" (
     ECHO "PYTHON_VERSION is not set"
     EXIT 1
