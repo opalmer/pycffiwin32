@@ -307,6 +307,7 @@ def load():
         except ImportError:
             pywincffi = _compile(_ffi())
 
+        # pylint: disable=no-member
         Loader.set(pywincffi.ffi, LibraryWrapper(pywincffi.lib))
 
     return Loader.get()
