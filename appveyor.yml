@@ -67,6 +67,9 @@ install:
   # required outside of development.
   - "%WITH_COMPILER% %PYTHON%\\Scripts\\pip.exe install -r dev_requirements.txt --upgrade"
 
+  # We can't run newer versions of pylint on Python 2.6
+  - "IF \"%PYTHON_VERSION%\"==\"2.6.x\" %WITH_COMPILER% %PYTHON%\\Scripts\\pip.exe install \"pylint<1.4\""
+
 test_script:
   - ps: cd C:\\project
   - "%WITH_COMPILER% %PYTHON%\\python.exe setup.py sdist bdist_wheel bdist_msi"
