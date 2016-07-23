@@ -46,17 +46,17 @@ environment:
       PYTHON_ARCH: "64"
 
 build: false  # Not a C# project, build stuff at the test step instead.
-clone_folder: c:\\project
+clone_folder: C:\\project
 
 install:
-  - ps: cd C:\project
-  - "C:\project\.ci\appveyor\install.cmd"
+  - ps: cd C:\\project
+  - "C:\\project\\.ci\\appveyor\\install.cmd"
   -
 
 test_script:
   - ps: cd C:\\project
-  - "C:\project\.ci\appveyor\test.cmd"
-  - "C:\project\.ci\appveyor\lint.cmd"
+  - "C:\\project\\.ci\\appveyor\\test.cmd"
+  - "C:\\project\\.ci\\appveyor\\lint.cmd"
 
 artifacts:
   - path: dist\*.whl
