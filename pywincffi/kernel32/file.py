@@ -9,7 +9,8 @@ from six import integer_types, text_type, binary_type
 
 from pywincffi.core import dist
 from pywincffi.core.checks import NON_ZERO, input_check, error_check, NoneType
-from pywincffi.exceptions import WindowsAPIError
+from pywincffi.exceptions import WindowsAPIError, InputError
+from pywincffi.kernel32.error import overlapped_error_check
 from pywincffi.wintypes import (
     SECURITY_ATTRIBUTES, OVERLAPPED, HANDLE, wintype_to_cdata
 )
@@ -170,10 +171,8 @@ def WriteFile(hFile, lpBuffer, nNumberOfBytesToWrite=None, lpOverlapped=None):
         wintype_to_cdata(hFile), lpBuffer, nNumberOfBytesToWrite,
         bytes_written, wintype_to_cdata(lpOverlapped)
     )
-    expected = NON_ZERO if lpOverlapped is None else 0
-    error_check("WriteFile", code=code, expected=expected)
-
-    return bytes_written[0]
+    overlapped_error_check("WriteFile", code, lpOverlapped)
+    return bytes_written[0] if lpOverlapped is None else None
 
 
 def FlushFileBuffers(hFile):
@@ -193,9 +192,9 @@ def FlushFileBuffers(hFile):
     error_check("FlushFileBuffers", code=code, expected=NON_ZERO)
 
 
-def ReadFile(hFile, nNumberOfBytesToRead, lpOverlapped=None):
+def ReadFile(hFile, lpBuffer, nNumberOfBytesToRead, lpOverlapped=None):
     """
-    Read the specified number of bytes from ``hFile``.
+    Reads data from the specified file or I/O device.
 
     .. seealso::
 
@@ -204,8 +203,16 @@ def ReadFile(hFile, nNumberOfBytesToRead, lpOverlapped=None):
     :param pywincffi.wintypes.HANDLE hFile:
         The handle to read from.
 
+    :param bytearray lpBuffer:
+        The array to receive the data that was read.
+
+        .. note::
+
+            The provided ``lpBuffer`` must be at least as large
+            as ``nNumberOfBytesToRead``.
+
     :param int nNumberOfBytesToRead:
-        The number of bytes to read from ``hFile``
+        The maximum number of bytes to be read.
 
     :keyword pywincffi.wintypes.OVERLAPPED lpOverlapped:
         See Microsoft's documentation for intended usage and below for
@@ -215,32 +222,45 @@ def ReadFile(hFile, nNumberOfBytesToRead, lpOverlapped=None):
         >>> from pywincffi.kernel32 import ReadFile, CreateEvent
         >>> from pywincffi.wintypes import OVERLAPPED
         >>> hEvent = CreateEvent(...)
+        >>> lpBuffer = bytearray(12)
         >>> lpOverlapped = OVERLAPPED()
         >>> lpOverlapped.hEvent = hEvent
-        >>> read_data = ReadFile(  # read 12 bytes from hFile
-        ...     hFile, 12, lpOverlapped=lpOverlapped)
+        >>> read_data = ReadFile(  # read 12 bytes from hFile into lpBuffer
+        ...     hFile, lpBuffer, 12, lpOverlapped=lpOverlapped)
+
+    :raises InputError:
+        In addition to being raised for type issues :class:`InputError` will
+        also be raised if the size of the provided ``lpBuffer`` is smaller
+        than ``nNumberOfBytesToRead``.
 
     :returns:
-        Returns the binary data read from ``hFile``
-        Type is ``str`` on Python 2, ``bytes`` on Python 3.
+        This function returns the number of bytes read by the underlying
+        ReadFile() function as an interger.
     """
-    ffi, library = dist.load()
-
     input_check("hFile", hFile, HANDLE)
+    input_check("lpBuffer", lpBuffer, bytearray)
     input_check("nNumberOfBytesToRead", nNumberOfBytesToRead, integer_types)
     input_check(
         "lpOverlapped", lpOverlapped,
         allowed_types=(NoneType, OVERLAPPED)
     )
 
-    lpBuffer = ffi.new("char []", nNumberOfBytesToRead)
+    if len(lpBuffer) < nNumberOfBytesToRead:
+        raise InputError(
+            "ReadFile", None,
+            message="The length of `lpBuffer` is {} which is smaller than "
+                    "`nNumberOfBytesToRead` ({}).".format(
+                        len(lpBuffer), nNumberOfBytesToRead))
+
+    ffi, library = dist.load()
     bytes_read = ffi.new("LPDWORD")
     code = library.ReadFile(
-        wintype_to_cdata(hFile), lpBuffer, nNumberOfBytesToRead, bytes_read,
-        wintype_to_cdata(lpOverlapped)
+        wintype_to_cdata(hFile), ffi.from_buffer(lpBuffer),
+        nNumberOfBytesToRead, bytes_read, wintype_to_cdata(lpOverlapped)
     )
-    error_check("ReadFile", code=code, expected=NON_ZERO)
-    return ffi.unpack(lpBuffer, bytes_read[0])
+
+    overlapped_error_check("ReadFile", code, lpOverlapped)
+    return bytes_read[0] if lpOverlapped is None else None
 
 
 def MoveFileEx(lpExistingFileName, lpNewFileName, dwFlags=None):

@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 import os
 import socket
 import tempfile
@@ -7,8 +9,7 @@ from pywincffi.core import dist
 from pywincffi.dev.testutil import TestCase
 from pywincffi.exceptions import InputError
 from pywincffi.kernel32 import CloseHandle
-from pywincffi.wintypes import (
-    SOCKET, handle_from_file, socket_from_object)
+from pywincffi.wintypes import SOCKET, handle_from_file, socket_from_object
 
 try:
     WindowsError

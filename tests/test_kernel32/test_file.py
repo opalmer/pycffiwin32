@@ -11,8 +11,7 @@ from six import text_type
 
 from pywincffi.core import dist
 from pywincffi.dev.testutil import TestCase
-from pywincffi.exceptions import WindowsAPIError
-
+from pywincffi.exceptions import WindowsAPIError, InputError
 from pywincffi.kernel32 import file as _file  # used for mocks
 from pywincffi.kernel32 import (
     CreateFile, CloseHandle, MoveFileEx, WriteFile, FlushFileBuffers,
@@ -56,7 +55,7 @@ class TestReadFile(TestCase):
         self.addCleanup(os.remove, path)
         with os.fdopen(fd, "wb") as file_:
             file_.write(contents)
-        return text_type(path)
+        return text_type(path), len(contents)
 
     def _handle_to_read_file(self, path):
         _, library = dist.load()
@@ -69,23 +68,33 @@ class TestReadFile(TestCase):
         self.addCleanup(CloseHandle, hFile)
         return hFile
 
-    def test_write_then_read_bytes_ascii(self):
-        path = self._create_file(b"test_write_then_read_bytes_ascii")
+    def test_lpBuffer_smaller_than_nNumberOfBytesToRead(self):
+        path, _ = self._create_file(b"")
         hFile = self._handle_to_read_file(path)
-        contents = ReadFile(hFile, 1024)
-        self.assertEqual(contents, b"test_write_then_read_bytes_ascii")
 
-    def test_write_then_read_null_bytes(self):
-        path = self._create_file(b"hello\x00world")
-        hFile = self._handle_to_read_file(path)
-        contents = ReadFile(hFile, 1024)
-        self.assertEqual(contents, b"hello\x00world")
+        with self.assertRaisesRegex(
+            InputError, r".*The length of `lpBuffer` is.*"
+        ):
+            ReadFile(hFile, bytearray(0), 1)
 
-    def test_write_then_read_partial(self):
-        path = self._create_file(b"test_write_then_read_partial")
+    def test_lpBuffer_equal_to_nNumberOfBytesToRead(self):
+        path, _ = self._create_file(b"")
         hFile = self._handle_to_read_file(path)
-        contents = ReadFile(hFile, 4)
-        self.assertEqual(contents, b"test")
+        ReadFile(hFile, bytearray(1), 1)  # Should not raise exception
+
+    def test_read(self):
+        path, written = self._create_file(b"hello world")
+        self.assertEqual(written, 11)
+        hFile = self._handle_to_read_file(path)
+        lpBuffer = bytearray(written)
+        read = ReadFile(hFile, lpBuffer, 5)
+        self.assertEqual(read, 5)
+        self.assertEqual(lpBuffer[:read], bytearray(b"hello"))
+
+        # The rest of the buffer is essentially unmanaged but let's be sure
+        # the remainder of the buffer has not been modified by ReadFile().
+        self.assertEqual(
+            lpBuffer[read:], bytearray(b"\x00\x00\x00\x00\x00\x00"))
 
 
 class TestMoveFileEx(TestCase):

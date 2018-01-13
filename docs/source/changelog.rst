@@ -8,9 +8,20 @@ versions are shown first.
 Versions
 --------
 
-latest
-~~~~~~
+0.6.0
+~~~~~
 
+Notable enhancements and changes are:
+
+    * :issue:`141` - :func:`pywincffi.kernel32.file.ReadFile` has been updated
+      to provide improved support for overlapped IO. This is a **breaking change**
+      because the return value and signature of the ReadFile function has
+      changed.
+    * As part of :issue:`141` the following functions have been added:
+
+        * :func:`pywincffi.kernel32.error.GetLastError`
+        * :func:`pywincffi.kernel32.error.SetLastError`
+        * :func:`pywincffi.kernel32.error.get_error_message`
 
 0.5.0
 ~~~~~
